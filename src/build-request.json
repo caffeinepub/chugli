@@ -1,0 +1,73 @@
+{
+  "kind": "build_request",
+  "title": "Restrict Rooms search to unique room ID only",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-37",
+      "text": "Update the Rooms page search so that filtering is performed only by the room’s unique ID (room.id) rather than by room name; searching must match an ID exactly (after trimming whitespace), and an empty query must show the full rooms list.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "make the search that so that we can only search by using unique id"
+        ]
+      },
+      "acceptanceCriteria": [
+        "On frontend/src/pages/RoomsPage.tsx, the rooms filtering logic uses room.id (not room.name) when appliedSearchQuery is non-empty.",
+        "The search query is trimmed before applying; if the trimmed query is empty, all rooms are shown (no filtering).",
+        "Entering a room name that does not equal any room.id results in 0 matches (i.e., name-based partial matching no longer works).",
+        "Entering an exact room ID shows only the matching room card(s) (typically exactly one)."
+      ]
+    },
+    {
+      "id": "REQ-38",
+      "text": "Update user-facing copy in the Rooms search dialog to clearly indicate the search input expects a room ID (unique ID), including dialog description and input placeholder text.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "make the search that so that we can only search by using unique id"
+        ]
+      },
+      "acceptanceCriteria": [
+        "RoomsPage search dialog text no longer says \"Find rooms by name\" and instead describes searching by room ID in English.",
+        "RoomsPage search input placeholder no longer says \"Search room names...\" and instead prompts for a room ID in English."
+      ]
+    },
+    {
+      "id": "REQ-39",
+      "text": "Update the Rooms empty-state messaging so that when a non-empty room ID search returns no results, the helper text indicates no room was found for that ID (instead of suggesting trying a different search term generically).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages"
+        ],
+        "quotes": [
+          "make the search that so that we can only search by using unique id"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When appliedSearchQuery is non-empty and filteredRooms is empty, the empty-state helper text references the entered ID (or clearly indicates it is an ID-based search) in English.",
+        "When appliedSearchQuery is empty, existing non-search empty-state behavior remains unchanged."
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify any files under frontend/src/components/ui (read-only shadcn components).",
+    "Do not modify immutable auth/actor hook files listed in SYSTEM_CONTEXT.frontend.immutablePaths."
+  ],
+  "nonGoals": [
+    "Do not add backend endpoints or change backend storage for room search.",
+    "Do not implement searching by room name, location, or partial ID matching.",
+    "Do not add global search across areas beyond whatever rooms are already loaded for the current area selection."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

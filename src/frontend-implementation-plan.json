@@ -1,0 +1,54 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Rooms search: exact match by unique room ID",
+  "requirements": [
+    {
+      "id": "REQ-37",
+      "summary": "Change Rooms search filtering to exact-match on room.id (trimmed), and show all rooms when the trimmed query is empty.",
+      "acceptanceCriteria": [
+        "On frontend/src/pages/RoomsPage.tsx, the rooms filtering logic uses room.id (not room.name) when appliedSearchQuery is non-empty.",
+        "The search query is trimmed before applying; if the trimmed query is empty, all rooms are shown (no filtering).",
+        "Entering a room name that does not equal any room.id results in 0 matches (i.e., name-based partial matching no longer works).",
+        "Entering an exact room ID shows only the matching room card(s) (typically exactly one)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/RoomsPage.tsx",
+          "operation": "modify",
+          "description": "Update Rooms list filtering to use exact equality against room.id using a trimmed appliedSearchQuery. Ensure that when the trimmed query is empty, filteredRooms returns the full rooms list (no filtering). Also update the search apply handler so the applied query is stored trimmed to avoid whitespace-only searches."
+        }
+      ]
+    },
+    {
+      "id": "REQ-38",
+      "summary": "Update Rooms search dialog copy to indicate the input expects a unique room ID.",
+      "acceptanceCriteria": [
+        "RoomsPage search dialog text no longer says \"Find rooms by name\" and instead describes searching by room ID in English.",
+        "RoomsPage search input placeholder no longer says \"Search room names...\" and instead prompts for a room ID in English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/RoomsPage.tsx",
+          "operation": "modify",
+          "description": "Revise the search dialog description and the search input placeholder to explicitly instruct users to search by the room's unique ID (room ID), not by room name."
+        }
+      ]
+    },
+    {
+      "id": "REQ-39",
+      "summary": "Adjust Rooms empty-state messaging to be ID-specific when an ID search yields no matches, without changing the non-search empty state.",
+      "acceptanceCriteria": [
+        "When appliedSearchQuery is non-empty and filteredRooms is empty, the empty-state helper text references the entered ID (or clearly indicates it is an ID-based search) in English.",
+        "When appliedSearchQuery is empty, existing non-search empty-state behavior remains unchanged."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/RoomsPage.tsx",
+          "operation": "modify",
+          "description": "Update the empty-state helper text branch used when a non-empty appliedSearchQuery produces zero results so it states that no room was found for that room ID (and references the entered ID). Keep the existing empty-state messaging unchanged when appliedSearchQuery is empty."
+        }
+      ]
+    }
+  ]
+}

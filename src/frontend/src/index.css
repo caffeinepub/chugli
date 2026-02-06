@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --radius: 0.75rem;
+        
+        /* Vibrant coral/orange theme - light mode */
+        --background: 0.98 0.01 30;
+        --foreground: 0.2 0.02 30;
+        
+        --card: 1 0 0;
+        --card-foreground: 0.2 0.02 30;
+        
+        --popover: 1 0 0;
+        --popover-foreground: 0.2 0.02 30;
+        
+        --primary: 0.65 0.22 25;
+        --primary-foreground: 1 0 0;
+        
+        --secondary: 0.95 0.03 60;
+        --secondary-foreground: 0.3 0.02 30;
+        
+        --muted: 0.96 0.01 30;
+        --muted-foreground: 0.5 0.01 30;
+        
+        --accent: 0.92 0.08 45;
+        --accent-foreground: 0.2 0.02 30;
+        
+        --destructive: 0.55 0.25 15;
+        --destructive-foreground: 1 0 0;
+        
+        --border: 0.92 0.01 30;
+        --input: 0.92 0.01 30;
+        --ring: 0.65 0.22 25;
+        
+        --chart-1: 0.65 0.22 25;
+        --chart-2: 0.6 0.18 180;
+        --chart-3: 0.55 0.15 280;
+        --chart-4: 0.7 0.2 120;
+        --chart-5: 0.75 0.18 60;
+    }
+
+    .dark {
+        --background: 0.15 0.02 30;
+        --foreground: 0.95 0.01 30;
+        
+        --card: 0.2 0.02 30;
+        --card-foreground: 0.95 0.01 30;
+        
+        --popover: 0.18 0.02 30;
+        --popover-foreground: 0.95 0.01 30;
+        
+        --primary: 0.7 0.24 25;
+        --primary-foreground: 0.15 0.02 30;
+        
+        --secondary: 0.25 0.02 30;
+        --secondary-foreground: 0.95 0.01 30;
+        
+        --muted: 0.25 0.02 30;
+        --muted-foreground: 0.6 0.01 30;
+        
+        --accent: 0.3 0.03 30;
+        --accent-foreground: 0.95 0.01 30;
+        
+        --destructive: 0.6 0.28 15;
+        --destructive-foreground: 0.95 0.01 30;
+        
+        --border: 0.3 0.02 30;
+        --input: 0.3 0.02 30;
+        --ring: 0.7 0.24 25;
+        
+        --chart-1: 0.7 0.24 25;
+        --chart-2: 0.65 0.2 180;
+        --chart-3: 0.6 0.18 280;
+        --chart-4: 0.75 0.22 120;
+        --chart-5: 0.8 0.2 60;
+    }
+
+    * {
+        @apply border-border;
+    }
+    
+    body {
+        @apply bg-background text-foreground;
+        font-feature-settings: "rlig" 1, "calt" 1;
+        position: relative;
+    }
+    
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('/assets/generated/chugli-background.dim_1920x1080.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0.03;
+        z-index: -1;
+        pointer-events: none;
+    }
+}
+
+@layer utilities {
+    .text-balance {
+        text-wrap: balance;
+    }
+}

@@ -1,0 +1,62 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-update-the-rooms-page-search-so-that-filtering-is-performed-only-by-the-room-s-unique-id-room-id-rather-than-by-room-name-searching-must-match-an-id-exactly-after-trimming-whitespace-and-an-empty-query-must-show-the-full-rooms-list",
+      "featureTitle": "Update the Rooms page search so that filtering is performed only by the room’s unique ID (room.id) rather than by room name; searching must match an ID exactly (after trimming whitespace), and an empty query must show the full rooms list.",
+      "files": [
+        "frontend/src/pages/RoomsPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-37"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-user-facing-copy-in-the-rooms-search-dialog-to-clearly-indicate-the-search-input-expects-a-room-id-unique-id-including-dialog-description-and-input-placeholder-text",
+      "featureTitle": "Update user-facing copy in the Rooms search dialog to clearly indicate the search input expects a room ID (unique ID), including dialog description and input placeholder text.",
+      "files": [
+        "frontend/src/pages/RoomsPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-38"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-rooms-empty-state-messaging-so-that-when-a-non-empty-room-id-search-returns-no-results-the-helper-text-indicates-no-room-was-found-for-that-id-instead-of-suggesting-trying-a-different-search-term-generically",
+      "featureTitle": "Update the Rooms empty-state messaging so that when a non-empty room ID search returns no results, the helper text indicates no room was found for that ID (instead of suggesting trying a different search term generically).",
+      "files": [
+        "frontend/src/pages/RoomsPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-39"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
