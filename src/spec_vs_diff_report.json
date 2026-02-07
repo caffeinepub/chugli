@@ -1,56 +1,84 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T05:00:31.101Z",
-  "summary": "The BuildRequest asked for a production rebuild/republish with no functional/code changes. The diff shows multiple source files modified (including backend and frontend), plus a redeploy marker comment and a large update to a frontend summary file describing many functional/UI features—none of which are requested for a redeploy-only retry. There is also no diff evidence of any actual production build/deploy trigger or configuration change that would ensure a successful redeploy.",
+  "generatedAt": "2026-02-07T10:06:18.917Z",
+  "summary": "Diff adds Message.senderPrincipal with a migration and enforces bans in createRoom/sendMessage, plus frontend admin-gated UI for delete/ban actions and new React Query hooks (per summaries). However, the diff summary does not show the required backend owner/admin model, admin-only endpoints (isAdmin, ban/unban, delete room/message), or backend authorization checks for those endpoints. Migration backfills senderPrincipal as null without documented deterministic sentinel behavior.",
   "missing_requirements": [
     {
       "id": "REQ-1",
-      "requirement": "Rebuild and publish the current application code to production again with no functional changes, ensuring the deployed version includes the latest committed fixes (including the \"All areas\" rooms visibility behavior).",
-      "reason": "The diff only shows code/content modifications; it does not provide evidence of a production build/deploy being triggered or any deployment/pipeline change to accomplish the republish. Additionally, the requirement explicitly calls for no feature/code changes for this request, but multiple files were modified.",
+      "requirement": "Implement an owner/admin permission model tied to Internet Identity, including first authenticated caller becoming immutable owner on fresh deploy, and expose an isAdmin query for the caller.",
+      "reason": "backend/main.mo shows inclusion of authorization modules but the diff summary does not show any owner/admin state initialization, immutability logic, or an isAdmin query method implementation.",
       "evidence": [
-        "backend/main.mo",
-        "frontend/src/App.tsx",
-        "frontend-file-summaries.txt",
-        "project_state.json"
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Add admin-only backend methods to ban and unban principals and enforce authorization (non-admin cannot ban/unban).",
+      "reason": "Bans are enforced in createRoom/sendMessage and bannedUsers state exists, but the diff summary does not show any public admin-only banUser/unbanUser methods or their authorization checks.",
+      "evidence": [
+        "backend/main.mo (truncated)",
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Add admin-only backend methods to delete a room (and its messages/reports) and delete a message by (roomId, messageId).",
+      "reason": "Frontend adds UI/actions for delete room/message, but the diff summary does not show backend deleteRoom/deleteMessage methods, nor room/message removal logic (including associated messages and room-scoped reports).",
+      "evidence": [
+        "backend/main.mo (truncated)",
+        "frontend/src/pages/ChatPage.tsx (truncated)",
+        "frontend/src/components/chat/MessageActionsMenu.tsx (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Migration backfills senderPrincipal for existing messages in a deterministic way (e.g., sentinel/anonymous principal) and documents the behavior in code comments.",
+      "reason": "Migration sets senderPrincipal = null for old messages; the diff summary does not show a deterministic sentinel principal being used, nor any comment documenting the backfill behavior.",
+      "evidence": [
+        "backend/migration.mo"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Backend logic changes in the Motoko canister (e.g., access control checks, message retention limit, room/message/report/profile structures shown in modified main.mo).",
-      "reason": "The request explicitly constrained the work to a redeploy/republish with no functional changes; modifying backend source code goes beyond a redeploy-only retry.",
+      "description": "Added/changed location/area selection system with an \"All areas\" sentinel and a full India states dataset (plus centroid utilities).",
+      "reason": "Not requested by any REQ (scope is owner-only moderation via Internet Identity).",
       "evidence": [
-        "backend/main.mo"
+        "frontend-file-summaries.txt (frontend/src/storage/areaSelectionStorage.ts, frontend/src/hooks/useAreaSelection.ts, frontend/src/data/indiaStates.ts, frontend/src/data/indiaStateCentroids.ts, frontend/src/utils/location/...)"
       ]
     },
     {
-      "description": "Frontend code change adding a \"Redeploy marker\" comment timestamp in App.tsx.",
-      "reason": "Even if intended as a no-op, it is still an unrequested code change under a redeploy-only request.",
+      "description": "Global UI theme/style changes (new vibrant coral/orange OKLCH theme, tailwind config updates, background pattern integration).",
+      "reason": "Not requested; BuildRequest only asked for moderation controls and related hooks.",
       "evidence": [
-        "frontend/src/App.tsx"
+        "frontend-file-summaries.txt (frontend/src/index.css, frontend/tailwind.config.js)"
       ]
     },
     {
-      "description": "Introduction/description of numerous frontend functional/UI features and behaviors (area selection/geolocation handling, moderation hooks, theme/styling changes, router/query aliases, \"All areas\" sentinel normalization, etc.) as reflected in the updated frontend-file-summaries.",
-      "reason": "The BuildRequest explicitly lists adding features/UI redesign as non-goals and requires no functional changes; the summary indicates substantial functional/UI scope beyond a redeploy retry.",
+      "description": "Rooms page behavior changes (search filtering by exact room ID match, room creation gated behind authentication) beyond moderation features.",
+      "reason": "Not requested by the moderation requirements.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend-file-summaries.txt (frontend/src/pages/RoomsPage.tsx)"
       ]
     },
     {
-      "description": "Project tracking/state update marking a new feature request entry/status in project_state.json.",
-      "reason": "Not requested by the BuildRequest; it is meta-process state rather than a redeploy action, and there is no requirement to alter project tracking files.",
+      "description": "Layout/header/logo sizing and bottom navigation layout changes.",
+      "reason": "Not requested; BuildRequest explicitly focused on moderation functionality.",
       "evidence": [
-        "project_state.json"
+        "frontend-file-summaries.txt (frontend/src/components/layout/AppShell.tsx)"
       ]
     }
   ],
-  "confidence": 0.68,
+  "confidence": 0.64,
   "changed_files": [
     "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
+    "frontend/src/components/chat/MessageActionsMenu.tsx",
+    "frontend/src/components/chat/MessageList.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/ChatPage.tsx",
     "project_state.json"
   ]
 }

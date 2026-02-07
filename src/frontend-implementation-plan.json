@@ -1,21 +1,48 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Retry production rebuild and republish (no functional changes)",
+  "title": "Admin-gated moderation UI (delete room/message, ban/unban) with React Query",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Trigger a fresh production build/redeploy from the current repo state without introducing functional changes, ensuring latest committed fixes (including “All areas” room visibility) are included.",
+      "id": "REQ-5",
+      "summary": "Render admin-only moderation controls in chat UI for deleting rooms/messages and banning/unbanning message senders.",
       "acceptanceCriteria": [
-        "A new production build is triggered using the current repo state with no feature/code changes required for this request.",
-        "Production deployment completes successfully (no deployment error).",
-        "The deployed production build reflects the latest committed fixes, including the \"All areas\" rooms visibility behavior."
+        "When not logged in or logged in as a non-admin, the UI does not render admin-only actions (delete room, delete message, ban/unban).",
+        "When logged in as admin, MessageActionsMenu includes 'Delete Message' and 'Ban User' (and 'Unban User' where applicable) and these actions call the backend and update UI state.",
+        "When logged in as admin, the UI provides a 'Delete Room' action accessible from the chat/room context with a confirmation dialog.",
+        "All new user-facing UI strings are in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/components/chat/MessageActionsMenu.tsx",
           "operation": "modify",
-          "description": "Update only the existing non-functional redeploy marker comment (e.g., timestamp) to force a new frontend build while keeping runtime behavior unchanged. Do not modify routing, component logic, or UI behavior."
+          "description": "Add admin-gated actions to the per-message dropdown: delete message and ban/unban sender. Use the authorization component’s Internet Identity integration patterns to determine whether the caller is admin via an isAdmin query, and only render these items for admins. For ban/unban, rely on senderPrincipal when present; if missing, disable the action with an English explanation. Show confirmation dialogs for destructive actions, and show success/error toasts for each action. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/chat/MessageList.tsx",
+          "operation": "modify",
+          "description": "Adjust message rendering so admin-only MessageActionsMenu controls can be accessed in a way that still keeps them hidden for non-admin users (e.g., keep hover UI but allow admin actions to appear based on admin status). Ensure the menu continues to receive message.senderPrincipal when available. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/pages/ChatPage.tsx",
+          "operation": "modify",
+          "description": "Add an admin-only 'Delete Room' action in the chat header (room context), protected by the isAdmin query so it is never visible to non-admins/guests. Include an English confirmation dialog, call the deleteRoom mutation, and navigate back to Rooms on success. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Add React Query queries/mutations for admin moderation functions and invalidate caches so UI updates immediately.",
+      "acceptanceCriteria": [
+        "After deleting a message, the messages query for that room is invalidated/refetched and the message disappears without a full page reload.",
+        "After deleting a room, the rooms query is invalidated/refetched and the room disappears from the Rooms page; if user is currently in that chat, the UI navigates away gracefully (e.g., back to Rooms).",
+        "Ban/unban actions show success/error toasts and invalidate any necessary queries (at minimum messages/rooms as needed)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks for admin moderation backend capabilities: an isAdmin query (wrapping isCallerAdmin) and mutations for deleteRoom, deleteMessage, banUser, unbanUser, plus an isUserBanned query to drive the Ban/Unban label. Ensure onSuccess invalidates/refetches relevant caches (at minimum ['messages', roomId] after deleteMessage; all rooms queries after deleteRoom; and appropriate messages/rooms queries after ban/unban). Keep errors surfaced to the UI so callers can show English toasts. Verify the component's usage instructions before implementing."
         }
       ]
     }

@@ -11,6 +11,7 @@ export interface Message {
     id: string;
     content: string;
     sender: string;
+    senderPrincipal?: Principal;
     timestamp: Time;
     roomId: string;
 }
@@ -45,13 +46,15 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    banUser(user: Principal): Promise<void>;
     blockUser(targetUser: string): Promise<void>;
     createRoom(name: string, location: string | null): Promise<Room>;
     deleteCallerUserProfile(): Promise<void>;
+    deleteMessage(roomId: string, messageId: string): Promise<void>;
+    deleteRoom(roomId: string): Promise<void>;
     getBlocks(user: Principal): Promise<Array<string> | null>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getMessages(roomId: string, afterTimestamp: Time | null): Promise<Array<Message>>;
     getMessagesForRoom(roomId: string): Promise<Array<Message> | null>;
     getMutes(user: Principal): Promise<Array<string> | null>;
     getReportsForRoom(room: string): Promise<Array<Report> | null>;
@@ -59,8 +62,10 @@ export interface backendInterface {
     getRoomsByLocation(location: string | null): Promise<Array<Room>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    isUserBanned(user: Principal): Promise<boolean>;
     muteUser(targetUser: string): Promise<void>;
     reportContent(reportedUser: string | null, reportedMessage: string | null, room: string, reason: string): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     sendMessage(roomId: string, sender: string, content: string): Promise<Message>;
+    unbanUser(user: Principal): Promise<void>;
 }

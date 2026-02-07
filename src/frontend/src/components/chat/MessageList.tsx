@@ -71,14 +71,12 @@ export default function MessageList({ messages, roomId }: MessageListProps) {
                     <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                   </div>
 
-                  {!isOwnMessage && (
-                    <div className="absolute top-0 -right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MessageActionsMenu
-                        message={message}
-                        roomId={roomId}
-                      />
-                    </div>
-                  )}
+                  <div className="absolute top-0 -right-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <MessageActionsMenu
+                      message={message}
+                      roomId={roomId}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

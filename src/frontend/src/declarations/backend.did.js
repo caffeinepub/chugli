@@ -13,6 +13,7 @@ export const Message = IDL.Record({
   'id' : IDL.Text,
   'content' : IDL.Text,
   'sender' : IDL.Text,
+  'senderPrincipal' : IDL.Opt(IDL.Principal),
   'timestamp' : Time,
   'roomId' : IDL.Text,
 });
@@ -50,6 +51,7 @@ export const idlService = IDL.Service({
       [],
       [
         IDL.Record({
+          'bannedUsers' : IDL.Vec(IDL.Principal),
           'messageCounter' : IDL.Nat,
           'mutes' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(IDL.Text))),
           'messages' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(Message))),
@@ -65,9 +67,12 @@ export const idlService = IDL.Service({
     ),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'banUser' : IDL.Func([IDL.Principal], [], []),
   'blockUser' : IDL.Func([IDL.Text], [], []),
   'createRoom' : IDL.Func([IDL.Text, IDL.Opt(IDL.Text)], [Room], []),
   'deleteCallerUserProfile' : IDL.Func([], [], []),
+  'deleteMessage' : IDL.Func([IDL.Text, IDL.Text], [], []),
+  'deleteRoom' : IDL.Func([IDL.Text], [], []),
   'getBlocks' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(IDL.Vec(IDL.Text))],
@@ -75,11 +80,6 @@ export const idlService = IDL.Service({
     ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getMessages' : IDL.Func(
-      [IDL.Text, IDL.Opt(Time)],
-      [IDL.Vec(Message)],
-      ['query'],
-    ),
   'getMessagesForRoom' : IDL.Func(
       [IDL.Text],
       [IDL.Opt(IDL.Vec(Message))],
@@ -107,6 +107,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isUserBanned' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
   'muteUser' : IDL.Func([IDL.Text], [], []),
   'reportContent' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
@@ -115,6 +116,7 @@ export const idlService = IDL.Service({
     ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'sendMessage' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [Message], []),
+  'unbanUser' : IDL.Func([IDL.Principal], [], []),
 });
 
 export const idlInitArgs = [];
@@ -125,6 +127,7 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Text,
     'content' : IDL.Text,
     'sender' : IDL.Text,
+    'senderPrincipal' : IDL.Opt(IDL.Principal),
     'timestamp' : Time,
     'roomId' : IDL.Text,
   });
@@ -162,6 +165,7 @@ export const idlFactory = ({ IDL }) => {
         [],
         [
           IDL.Record({
+            'bannedUsers' : IDL.Vec(IDL.Principal),
             'messageCounter' : IDL.Nat,
             'mutes' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(IDL.Text))),
             'messages' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(Message))),
@@ -177,9 +181,12 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'banUser' : IDL.Func([IDL.Principal], [], []),
     'blockUser' : IDL.Func([IDL.Text], [], []),
     'createRoom' : IDL.Func([IDL.Text, IDL.Opt(IDL.Text)], [Room], []),
     'deleteCallerUserProfile' : IDL.Func([], [], []),
+    'deleteMessage' : IDL.Func([IDL.Text, IDL.Text], [], []),
+    'deleteRoom' : IDL.Func([IDL.Text], [], []),
     'getBlocks' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(IDL.Vec(IDL.Text))],
@@ -187,11 +194,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getMessages' : IDL.Func(
-        [IDL.Text, IDL.Opt(Time)],
-        [IDL.Vec(Message)],
-        ['query'],
-      ),
     'getMessagesForRoom' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(IDL.Vec(Message))],
@@ -219,6 +221,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isUserBanned' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'muteUser' : IDL.Func([IDL.Text], [], []),
     'reportContent' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
@@ -227,6 +230,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'sendMessage' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [Message], []),
+    'unbanUser' : IDL.Func([IDL.Principal], [], []),
   });
 };
 

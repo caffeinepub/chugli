@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { MoreVertical, Volume2, Ban, Flag } from 'lucide-react';
+import { MoreVertical, Volume2, Ban, Flag, Trash2, ShieldOff, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -15,12 +16,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Message } from '../../backend';
 import { useModeration } from '../../hooks/useModeration';
-import { useMuteUser, useBlockUser, useReportContent } from '../../hooks/useQueries';
+import {
+  useMuteUser,
+  useBlockUser,
+  useReportContent,
+  useIsAdmin,
+  useDeleteMessage,
+  useBanUser,
+  useUnbanUser,
+  useIsUserBanned,
+} from '../../hooks/useQueries';
 import { toast } from 'sonner';
+import { Principal } from '@dfinity/principal';
 
 interface MessageActionsMenuProps {
   message: Message;
@@ -30,10 +51,23 @@ interface MessageActionsMenuProps {
 export default function MessageActionsMenu({ message, roomId }: MessageActionsMenuProps) {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [banConfirmOpen, setBanConfirmOpen] = useState(false);
+  const [unbanConfirmOpen, setUnbanConfirmOpen] = useState(false);
+
   const { muteUser, blockUser } = useModeration();
   const muteUserMutation = useMuteUser();
   const blockUserMutation = useBlockUser();
   const reportMutation = useReportContent();
+
+  // Admin hooks
+  const { data: isAdmin = false } = useIsAdmin();
+  const deleteMessageMutation = useDeleteMessage();
+  const banUserMutation = useBanUser();
+  const unbanUserMutation = useUnbanUser();
+
+  const senderPrincipal = message.senderPrincipal ? Principal.fromText(message.senderPrincipal.toString()) : null;
+  const { data: isUserBanned = false } = useIsUserBanned(senderPrincipal);
 
   const handleMute = async () => {
     muteUser(message.sender);
@@ -77,6 +111,49 @@ export default function MessageActionsMenu({ message, roomId }: MessageActionsMe
     }
   };
 
+  const handleDeleteMessage = async () => {
+    try {
+      await deleteMessageMutation.mutateAsync({ roomId, messageId: message.id });
+      toast.success('Message deleted successfully');
+      setDeleteConfirmOpen(false);
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to delete message');
+      console.error(error);
+    }
+  };
+
+  const handleBanUser = async () => {
+    if (!senderPrincipal) {
+      toast.error('Cannot ban user: sender information unavailable');
+      return;
+    }
+
+    try {
+      await banUserMutation.mutateAsync(senderPrincipal);
+      toast.success(`User ${message.sender} has been banned`);
+      setBanConfirmOpen(false);
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to ban user');
+      console.error(error);
+    }
+  };
+
+  const handleUnbanUser = async () => {
+    if (!senderPrincipal) {
+      toast.error('Cannot unban user: sender information unavailable');
+      return;
+    }
+
+    try {
+      await unbanUserMutation.mutateAsync(senderPrincipal);
+      toast.success(`User ${message.sender} has been unbanned`);
+      setUnbanConfirmOpen(false);
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to unban user');
+      console.error(error);
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -98,9 +175,44 @@ export default function MessageActionsMenu({ message, roomId }: MessageActionsMe
             <Flag className="mr-2 h-4 w-4" />
             Report
           </DropdownMenuItem>
+
+          {isAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setDeleteConfirmOpen(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Message
+              </DropdownMenuItem>
+              {senderPrincipal ? (
+                isUserBanned ? (
+                  <DropdownMenuItem onClick={() => setUnbanConfirmOpen(true)}>
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    Unban User
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() => setBanConfirmOpen(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <ShieldOff className="mr-2 h-4 w-4" />
+                    Ban User
+                  </DropdownMenuItem>
+                )
+              ) : (
+                <DropdownMenuItem disabled>
+                  <ShieldOff className="mr-2 h-4 w-4" />
+                  Ban User (unavailable)
+                </DropdownMenuItem>
+              )}
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Report Dialog */}
       <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -131,6 +243,70 @@ export default function MessageActionsMenu({ message, roomId }: MessageActionsMe
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Message Confirmation */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Message</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this message? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteMessage}
+              disabled={deleteMessageMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMessageMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Ban User Confirmation */}
+      <AlertDialog open={banConfirmOpen} onOpenChange={setBanConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ban User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to ban {message.sender}? They will no longer be able to create rooms or send
+              messages until unbanned.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBanUser}
+              disabled={banUserMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {banUserMutation.isPending ? 'Banning...' : 'Ban User'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Unban User Confirmation */}
+      <AlertDialog open={unbanConfirmOpen} onOpenChange={setUnbanConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unban User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to unban {message.sender}? They will be able to create rooms and send messages
+              again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUnbanUser} disabled={unbanUserMutation.isPending}>
+              {unbanUserMutation.isPending ? 'Unbanning...' : 'Unban User'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

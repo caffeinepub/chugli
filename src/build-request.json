@@ -1,35 +1,127 @@
 {
   "kind": "build_request",
-  "title": "Retry production rebuild and republish (no functional changes)",
+  "title": "Owner-only admin moderation (delete room/message, ban users) via Internet Identity",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Rebuild and publish the current application code to production again with no functional changes, ensuring the deployed version includes the latest committed fixes (including the \"All areas\" rooms visibility behavior).",
-      "target": "unknown",
+      "text": "Implement an owner/admin permission model tied to Internet Identity so that only the app owner (admin) can perform destructive moderation actions (delete rooms, delete messages, ban/unban users). The first authenticated principal to initialize the canister should become the immutable owner/admin (unless an owner/admin already exists in state).",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "Try again"
+          "is there any way only I can have the option to delete a room, a message or ban person from the app if I login from my internet id"
         ]
       },
       "acceptanceCriteria": [
-        "A new production build is triggered using the current repo state with no feature/code changes required for this request.",
-        "Production deployment completes successfully (no deployment error).",
-        "The deployed production build reflects the latest committed fixes, including the \"All areas\" rooms visibility behavior."
+        "On a fresh deployment with no owner set, the first authenticated caller becomes the owner/admin automatically.",
+        "After an owner/admin is set, non-admin authenticated users cannot obtain admin privileges via any public method.",
+        "Anonymous/visitor users cannot become owner/admin and cannot call any admin-only methods.",
+        "Backend exposes a query method that allows the frontend to determine whether the current caller is admin (e.g., a boolean)."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Add backend support for global bans enforced by principal: store a persistent list of banned principals and prevent banned principals from creating rooms and sending messages.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "...ban person from the app..."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin can ban and unban a principal using new backend methods.",
+        "If a principal is banned, backend traps/rejects calls to createRoom and sendMessage for that principal with a clear English error message.",
+        "Non-admin callers cannot ban/unban principals (backend enforces authorization)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Add admin-only backend methods to delete a room and delete a message. Deleting a room must remove the room and its associated message list (and any associated room-scoped reports, if stored by room key). Deleting a message must remove it from the room’s message list by message ID.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "...delete a room, a message..."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin can delete any room by roomId, and the room no longer appears in getRoomsByLocation responses afterward.",
+        "Admin can delete any message by (roomId, messageId), and the deleted message no longer appears in getMessagesForRoom/getMessages results afterward.",
+        "Non-admin callers cannot delete rooms or messages (backend enforces authorization).",
+        "Deleting a room also deletes its stored messages for that room ID (and room reports keyed by room ID, if present)."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Extend the backend Message model so each message includes the sender’s Principal (in addition to the existing display sender Text), so the frontend can target the correct identity for admin actions like ban. Add conditional state migration to preserve existing stored messages by backfilling senderPrincipal for old messages.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "...ban person from the app..."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Newly sent messages include a senderPrincipal field set to the caller principal regardless of the provided sender display text.",
+        "Existing stored messages from before the upgrade remain readable after upgrade (no traps on query).",
+        "Migration backfills senderPrincipal for existing messages in a deterministic way (e.g., using a sentinel/anonymous principal) and documents the behavior in code comments.",
+        "A migration file (backend/migration.mo) is added/updated only if required by the platform’s conditional migration policy and the Message type/state layout change necessitates it."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Add frontend admin-gated UI controls: when the logged-in user is admin, show options to (1) delete a message and (2) ban/unban the message sender within the per-message actions menu; and show an option to delete a room from the room/chat UI. These controls must not be visible to non-admin users.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "only I can have the option to delete a room, a message or ban person from the app if I login from my internet id"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When not logged in or logged in as a non-admin, the UI does not render admin-only actions (delete room, delete message, ban/unban).",
+        "When logged in as admin, MessageActionsMenu includes 'Delete Message' and 'Ban User' (and 'Unban User' where applicable) and these actions call the backend and update UI state.",
+        "When logged in as admin, the UI provides a 'Delete Room' action accessible from the chat/room context with a confirmation dialog.",
+        "All new user-facing UI strings are in English."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Add React Query hooks/mutations for the new backend admin endpoints (isAdmin query, deleteRoom, deleteMessage, banUser, unbanUser) and ensure relevant cached queries are invalidated so the UI updates immediately (rooms list, messages list).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "After deleting a message, the messages query for that room is invalidated/refetched and the message disappears without a full page reload.",
+        "After deleting a room, the rooms query is invalidated/refetched and the room disappears from the Rooms page; if user is currently in that chat, the UI navigates away gracefully (e.g., back to Rooms).",
+        "Ban/unban actions show success/error toasts and invalidate any necessary queries (at minimum messages/rooms as needed)."
       ]
     }
   ],
   "constraints": [
-    "Do not introduce functional changes; this request is a republish/redeploy only.",
-    "Keep the backend as a single Motoko actor; do not split into multiple services.",
-    "Do not edit frontend files under immutablePaths (compose existing UI components instead, if any UI change were needed—which it is not for this request)."
+    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services.",
+    "Do not edit files under frontend/src/components/ui or any frontend immutablePaths (compose existing UI components instead).",
+    "Do not rely on third-party auth; use Internet Identity only."
   ],
   "nonGoals": [
-    "Adding new features (e.g., room-area filters, new moderation tools, UI redesign).",
-    "Backend schema/state migrations (unless strictly required by the platform to complete the redeploy)."
+    "Implementing moderator roles for multiple admins beyond a single owner/admin (unless trivially supported by the existing access control module).",
+    "Adding external databases or off-chain storage for bans/moderation logs.",
+    "Real-time updates beyond the existing polling behavior."
   ],
   "imageRequirements": {
     "required": [],

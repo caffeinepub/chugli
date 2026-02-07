@@ -2,10 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-rebuild-and-publish-the-current-application-code-to-production-again-with-no-functional-changes-ensuring-the-deployed-version-includes-the-latest-committed-fixes-including-the-all-areas-rooms-visibility-behavior",
-      "featureTitle": "Rebuild and publish the current application code to production again with no functional changes, ensuring the deployed version includes the latest committed fixes (including the \"All areas\" rooms visibility behavior).",
+      "featureId": "feature-add-frontend-admin-gated-ui-controls-when-the-logged-in-user-is-admin-show-options-to-1-delete-a-message-and-2-ban-unban-the-message-sender-within-the-per-message-actions-menu-and-show-an-option-to-delete-a-room-from-the-room-chat-ui-these-controls-must-not-be-visible-to-non-admin-users",
+      "featureTitle": "Add frontend admin-gated UI controls: when the logged-in user is admin, show options to (1) delete a message and (2) ban/unban the message sender within the per-message actions menu; and show an option to delete a room from the room/chat UI. These controls must not be visible to non-admin users.",
       "files": [
-        "frontend/src/App.tsx"
+        "frontend/src/components/chat/MessageActionsMenu.tsx",
+        "frontend/src/components/chat/MessageList.tsx",
+        "frontend/src/pages/ChatPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -16,7 +18,26 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-react-query-hooks-mutations-for-the-new-backend-admin-endpoints-isadmin-query-deleteroom-deletemessage-banuser-unbanuser-and-ensure-relevant-cached-queries-are-invalidated-so-the-ui-updates-immediately-rooms-list-messages-list",
+      "featureTitle": "Add React Query hooks/mutations for the new backend admin endpoints (isAdmin query, deleteRoom, deleteMessage, banUser, unbanUser) and ensure relevant cached queries are invalidated so the UI updates immediately (rooms list, messages list).",
+      "files": [
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
       ],
       "confidence": "high"
     }
