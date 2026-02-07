@@ -9,6 +9,7 @@ import { useAreaSelection } from './hooks/useAreaSelection';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
 
+// Redeploy marker: 2026-02-07T14:32:00Z
 function RootLayout() {
   // Initialize anonymous profile and area selection
   useAnonProfile();

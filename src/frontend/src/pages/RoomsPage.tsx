@@ -19,7 +19,11 @@ export default function RoomsPage() {
   const navigate = useNavigate();
   const { selection } = useAreaSelection();
   const { isAuthenticated } = useAuthControls();
-  const { data: rooms, isLoading } = useRoomsByLocation(selection.areaId);
+  
+  // Map ALL_AREAS_ID sentinel to null for backend query
+  const locationParam = selection.areaId === ALL_AREAS_ID ? null : selection.areaId;
+  const { data: rooms, isLoading } = useRoomsByLocation(locationParam);
+  
   const createRoom = useCreateRoom();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [roomName, setRoomName] = useState('');

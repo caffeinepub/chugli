@@ -1,15 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
+import { ALL_AREAS_ID } from '../storage/areaSelectionStorage';
 import type { Room, Message } from '../backend';
 
 export function useGetRoomsByLocation(location: string | null) {
   const { actor, isFetching } = useActor();
 
+  // Normalize location: convert ALL_AREAS_ID sentinel to null for backend
+  const normalizedLocation = location === ALL_AREAS_ID ? null : location;
+
   return useQuery<Room[]>({
-    queryKey: ['rooms', location],
+    queryKey: ['rooms', normalizedLocation],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getRoomsByLocation(location);
+      return actor.getRoomsByLocation(normalizedLocation);
     },
     enabled: !!actor && !isFetching,
   });

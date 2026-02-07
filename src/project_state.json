@@ -3,43 +3,22 @@
   "projectStateVersion": 3,
   "summary": "New project",
   "architectural_notes": [],
-  "known_issues": [],
-  "isFixRequest": false,
+  "known_issues": [
+    "Production deployment failed with a deployment error; user requested a retry."
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-update-the-rooms-page-search-so-that-filtering-is-performed-only-by-the-room-s-unique-id-room-id-rather-than-by-room-name-searching-must-match-an-id-exactly-after-trimming-whitespace-and-an-empty-query-must-show-the-full-rooms-list",
-      "title": "Update the Rooms page search so that filtering is performed only by the room’s unique ID (room.id) rather than by room name; searching must match an ID exactly (after trimming whitespace), and an empty query must show the full rooms list.",
+      "id": "feature-rebuild-and-publish-the-current-application-code-to-production-again-with-no-functional-changes-ensuring-the-deployed-version-includes-the-latest-committed-fixes-including-the-all-areas-rooms-visibility-behavior",
+      "title": "Rebuild and publish the current application code to production again with no functional changes, ensuring the deployed version includes the latest committed fixes (including the \"All areas\" rooms visibility behavior).",
       "reqIds": [
-        "REQ-37"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-user-facing-copy-in-the-rooms-search-dialog-to-clearly-indicate-the-search-input-expects-a-room-id-unique-id-including-dialog-description-and-input-placeholder-text",
-      "title": "Update user-facing copy in the Rooms search dialog to clearly indicate the search input expects a room ID (unique ID), including dialog description and input placeholder text.",
-      "reqIds": [
-        "REQ-38"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-rooms-empty-state-messaging-so-that-when-a-non-empty-room-id-search-returns-no-results-the-helper-text-indicates-no-room-was-found-for-that-id-instead-of-suggesting-trying-a-different-search-term-generically",
-      "title": "Update the Rooms empty-state messaging so that when a non-empty room ID search returns no results, the helper text indicates no room was found for that ID (instead of suggesting trying a different search term generically).",
-      "reqIds": [
-        "REQ-39"
+        "REQ-1"
       ],
       "version": 1
     }
   ],
-  "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "Restrict search functionality to only allow searching by unique ID",
-      "reqIds": [],
-      "status": "pending"
-    }
-  ],
-  "projectName": "Restrict Rooms search to unique room ID only",
+  "new_feature_requests": [],
+  "projectName": "Retry production rebuild and republish (no functional changes)",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
