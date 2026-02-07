@@ -2,10 +2,11 @@ import List "mo:core/List";
 import Map "mo:core/Map";
 import Time "mo:core/Time";
 import Array "mo:core/Array";
-import Nat "mo:core/Nat";
 import Iter "mo:core/Iter";
+import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import Migration "migration";
@@ -22,11 +23,14 @@ actor {
   let MESSAGE_RETENTION_LIMIT = 100;
 
   let rooms = Map.empty<Text, Room>();
+  let roomPasswords = Map.empty<Text, Text>();
   let messages = Map.empty<Text, List.List<Message>>();
   let mutes = Map.empty<Principal, List.List<Text>>();
   let blocks = Map.empty<Principal, List.List<Text>>();
   let reports = Map.empty<Text, List.List<Report>>();
   let userProfiles = Map.empty<Principal, UserProfile>();
+
+  let bannedUsers = Map.empty<Principal, Bool>();
 
   type Room = {
     id : Text;
@@ -63,7 +67,11 @@ actor {
     lastUpdated : Time.Time;
   };
 
-  public shared ({ caller }) func createRoom(name : Text, location : ?Text) : async Room {
+  public shared ({ caller }) func createRoom(name : Text, location : ?Text, password : Text) : async Room {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can create rooms");
+    };
+
     let id = roomCounter.toText();
     let room : Room = {
       id;
@@ -73,14 +81,24 @@ actor {
       createdTimestamp = Time.now();
     };
     rooms.add(id, room);
+    roomPasswords.add(id, password);
     messages.add(id, List.empty<Message>());
     roomCounter += 1;
     room;
   };
 
   public shared ({ caller }) func sendMessage(roomId : Text, sender : Text, content : Text) : async Message {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can send messages");
+    };
+
     if (content.size() > 500) {
       Runtime.trap("Content cannot exceed 500 characters");
+    };
+
+    // Check if caller is banned
+    if (isUserBannedImpl(caller)) {
+      Runtime.trap("You are banned from sending messages");
     };
 
     let newMessage = {
@@ -114,10 +132,16 @@ actor {
   };
 
   public shared ({ caller }) func muteUser(targetUser : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can mute other users");
+    };
     updateUserMuteList(caller, targetUser);
   };
 
   public shared ({ caller }) func blockUser(targetUser : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can block other users");
+    };
     updateUserBlockList(caller, targetUser);
   };
 
@@ -127,6 +151,10 @@ actor {
     room : Text,
     reason : Text,
   ) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can report content");
+    };
+
     let newReport = {
       id = reportCounter.toText();
       reporter = caller.toText();
@@ -251,6 +279,9 @@ actor {
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
+    };
     userProfiles.get(user);
   };
 
@@ -276,6 +307,91 @@ actor {
       case (null) {
         Runtime.trap("Profile not found");
       };
+    };
+  };
+
+  public shared ({ caller }) func deleteMessage(roomId : Text, messageId : Text) : async Bool {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can delete messages");
+    };
+
+    removeMessageFromRoom(roomId, messageId);
+    true;
+  };
+
+  public shared ({ caller }) func deleteAllMessagesInRoom(roomId : Text) : async Bool {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can delete all messages");
+    };
+
+    messages.remove(roomId);
+    true;
+  };
+
+  public shared ({ caller }) func deleteRoomWithPassword(roomId : Text, password : Text) : async Bool {
+    switch (roomPasswords.get(roomId)) {
+      case (?storedPassword) {
+        if (storedPassword != password) {
+          Runtime.trap("Unauthorized: Incorrect room password provided");
+        };
+
+        rooms.remove(roomId);
+        messages.remove(roomId);
+        reports.remove(roomId);
+        roomPasswords.remove(roomId);
+        true;
+      };
+      case (null) {
+        Runtime.trap("Room not found");
+      };
+    };
+  };
+
+  public shared ({ caller }) func banUser(user : Principal) : async Bool {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can ban users");
+    };
+
+    bannedUsers.add(user, true);
+    true;
+  };
+
+  public shared ({ caller }) func unbanUser(user : Principal) : async Bool {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can unban users");
+    };
+
+    bannedUsers.remove(user);
+    true;
+  };
+
+  public query ({ caller }) func isUserBanned(user : Principal) : async Bool {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can check ban status");
+    };
+    isUserBannedImpl(user);
+  };
+
+  func removeMessageFromRoom(roomId : Text, messageId : Text) {
+    switch (messages.get(roomId)) {
+      case (?existingMessages) {
+        let filteredMessages = existingMessages.clone().filter(
+          func(message) {
+            message.id != messageId;
+          }
+        );
+        messages.add(roomId, filteredMessages);
+      };
+      case (null) {
+        Runtime.trap("No messages found for room");
+      };
+    };
+  };
+
+  func isUserBannedImpl(user : Principal) : Bool {
+    switch (bannedUsers.get(user)) {
+      case (?isBanned) { isBanned };
+      case (null) { false };
     };
   };
 };

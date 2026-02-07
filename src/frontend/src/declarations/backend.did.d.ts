@@ -39,9 +39,13 @@ export type UserRole = { 'admin' : null } |
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'banUser' : ActorMethod<[Principal], boolean>,
   'blockUser' : ActorMethod<[string], undefined>,
-  'createRoom' : ActorMethod<[string, [] | [string]], Room>,
+  'createRoom' : ActorMethod<[string, [] | [string], string], Room>,
+  'deleteAllMessagesInRoom' : ActorMethod<[string], boolean>,
   'deleteCallerUserProfile' : ActorMethod<[], undefined>,
+  'deleteMessage' : ActorMethod<[string, string], boolean>,
+  'deleteRoomWithPassword' : ActorMethod<[string, string], boolean>,
   'getBlocks' : ActorMethod<[Principal], [] | [Array<string>]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -51,6 +55,7 @@ export interface _SERVICE {
   'getRoomsByLocation' : ActorMethod<[[] | [string]], Array<Room>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isUserBanned' : ActorMethod<[Principal], boolean>,
   'muteUser' : ActorMethod<[string], undefined>,
   'reportContent' : ActorMethod<
     [[] | [string], [] | [string], string, string],
@@ -58,6 +63,7 @@ export interface _SERVICE {
   >,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'sendMessage' : ActorMethod<[string, string, string], Message>,
+  'unbanUser' : ActorMethod<[Principal], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

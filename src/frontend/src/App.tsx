@@ -3,13 +3,14 @@ import RoomsPage from './pages/RoomsPage';
 import ChatPage from './pages/ChatPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
+import AdminPage from './pages/AdminPage';
 import AppShell from './components/layout/AppShell';
 import { useAnonProfile } from './hooks/useAnonProfile';
 import { useAreaSelection } from './hooks/useAreaSelection';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
 
-// Redeploy marker: 2026-02-07T16:00:00Z
+// Redeploy marker: 2026-02-07T16:30:00Z
 function RootLayout() {
   // Initialize anonymous profile and area selection
   useAnonProfile();
@@ -50,7 +51,13 @@ const loginRoute = createRoute({
   component: LoginPage,
 });
 
-const routeTree = rootRoute.addChildren([roomsRoute, chatRoute, settingsRoute, loginRoute]);
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
+  component: AdminPage,
+});
+
+const routeTree = rootRoute.addChildren([roomsRoute, chatRoute, settingsRoute, loginRoute, adminRoute]);
 
 const router = createRouter({ routeTree });
 

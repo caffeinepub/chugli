@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { ALL_AREAS_ID } from '../storage/areaSelectionStorage';
 import type { Room, Message } from '../backend';
+import type { Principal } from '@icp-sdk/core/principal';
 
 export function useGetRoomsByLocation(location: string | null) {
   const { actor, isFetching } = useActor();
@@ -71,9 +72,9 @@ export function useCreateRoom() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ name, location }: { name: string; location: string | null }) => {
+    mutationFn: async ({ name, location, password }: { name: string; location: string | null; password: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createRoom(name, location);
+      return actor.createRoom(name, location, password);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['rooms', variables.location] });
@@ -142,6 +143,80 @@ export function useReportContent() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.reportContent(reportedUser, reportedMessage, room, reason);
+    },
+  });
+}
+
+// Password-based room deletion (available to anyone with the password)
+export function useDeleteRoomWithPassword() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ roomId, password }: { roomId: string; password: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.deleteRoomWithPassword(roomId, password);
+      if (!result) {
+        throw new Error('Failed to delete room - operation returned false');
+      }
+      return result;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate all room queries
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['room', variables.roomId] });
+      queryClient.invalidateQueries({ queryKey: ['messages', variables.roomId] });
+    },
+  });
+}
+
+// Admin moderation hooks
+
+export function useAdminDeleteMessage() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ roomId, messageId }: { roomId: string; messageId: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.deleteMessage(roomId, messageId);
+      if (!result) {
+        throw new Error('Failed to delete message - operation returned false');
+      }
+      return result;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['messages', variables.roomId] });
+    },
+  });
+}
+
+export function useAdminBanUser() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (userPrincipal: Principal) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.banUser(userPrincipal);
+      if (!result) {
+        throw new Error('Failed to ban user - operation returned false');
+      }
+      return result;
+    },
+  });
+}
+
+export function useAdminUnbanUser() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (userPrincipal: Principal) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.unbanUser(userPrincipal);
+      if (!result) {
+        throw new Error('Failed to unban user - operation returned false');
+      }
+      return result;
     },
   });
 }

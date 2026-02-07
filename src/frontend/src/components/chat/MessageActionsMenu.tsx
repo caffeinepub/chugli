@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { MoreVertical, Volume2, Ban, Flag } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MoreVertical, Volume2, Ban, Flag, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -15,14 +16,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Message } from '../../backend';
 import { useModeration } from '../../hooks/useModeration';
+import { useAdminAccess } from '../../hooks/useAdminAccess';
 import {
   useMuteUser,
   useBlockUser,
   useReportContent,
+  useAdminDeleteMessage,
 } from '../../hooks/useQueries';
 import { toast } from 'sonner';
 
@@ -34,11 +47,27 @@ interface MessageActionsMenuProps {
 export default function MessageActionsMenu({ message, roomId }: MessageActionsMenuProps) {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { muteUser, blockUser } = useModeration();
+  const { isUnlocked: isAdminUnlocked } = useAdminAccess();
   const muteUserMutation = useMuteUser();
   const blockUserMutation = useBlockUser();
   const reportMutation = useReportContent();
+  const deleteMessageMutation = useAdminDeleteMessage();
+
+  // Force re-render when admin access changes
+  const [, setForceUpdate] = useState(0);
+  useEffect(() => {
+    const handleAdminAccessChange = () => {
+      setForceUpdate(prev => prev + 1);
+    };
+
+    window.addEventListener('admin-access-changed', handleAdminAccessChange);
+    return () => {
+      window.removeEventListener('admin-access-changed', handleAdminAccessChange);
+    };
+  }, []);
 
   const handleMute = async () => {
     muteUser(message.sender);
@@ -81,6 +110,19 @@ export default function MessageActionsMenu({ message, roomId }: MessageActionsMe
     }
   };
 
+  const handleAdminDelete = async () => {
+    try {
+      await deleteMessageMutation.mutateAsync({
+        roomId,
+        messageId: message.id,
+      });
+      toast.success('Message deleted successfully');
+      setDeleteDialogOpen(false);
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to delete message');
+    }
+  };
+
   return (
     <>
       <DropdownMenu>
@@ -102,6 +144,19 @@ export default function MessageActionsMenu({ message, roomId }: MessageActionsMe
             <Flag className="h-4 w-4 mr-2" />
             Report
           </DropdownMenuItem>
+          
+          {isAdminUnlocked && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setDeleteDialogOpen(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Message (Admin)
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -139,6 +194,32 @@ export default function MessageActionsMenu({ message, roomId }: MessageActionsMe
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Admin Delete Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Message?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this message. This action cannot be undone.
+              <div className="mt-2 p-2 bg-muted rounded text-sm">
+                <p className="font-medium">{message.sender}</p>
+                <p className="text-muted-foreground">{message.content}</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleAdminDelete}
+              disabled={deleteMessageMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMessageMutation.isPending ? 'Deleting...' : 'Delete Message'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

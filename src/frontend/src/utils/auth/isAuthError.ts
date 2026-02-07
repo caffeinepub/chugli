@@ -24,6 +24,7 @@ export function isAuthError(error: unknown): boolean {
     'login required',
     'anonymous caller',
     'currently using the app in visitor mode',
+    'Only admins can',
   ];
 
   return authPatterns.some(pattern => 
@@ -55,5 +56,18 @@ export function extractErrorMessage(error: unknown, maxLength: number = 200): st
     return message.substring(0, maxLength) + '...';
   }
 
+  return message;
+}
+
+/**
+ * Appends actionable guidance when the error is authorization-related.
+ */
+export function getErrorWithGuidance(error: unknown): string {
+  const message = extractErrorMessage(error);
+  
+  if (isAuthError(error)) {
+    return `${message}\n\nPlease ensure you are logged in with an admin Internet Identity account.`;
+  }
+  
   return message;
 }

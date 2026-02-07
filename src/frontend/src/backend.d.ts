@@ -30,19 +30,33 @@ export interface UserProfile {
     lastUpdated: Time;
     avatarURL: string;
 }
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
+}
 export interface backendInterface {
+    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    banUser(user: Principal): Promise<boolean>;
     blockUser(targetUser: string): Promise<void>;
-    createRoom(name: string, location: string | null): Promise<Room>;
+    createRoom(name: string, location: string | null, password: string): Promise<Room>;
+    deleteAllMessagesInRoom(roomId: string): Promise<boolean>;
     deleteCallerUserProfile(): Promise<void>;
+    deleteMessage(roomId: string, messageId: string): Promise<boolean>;
+    deleteRoomWithPassword(roomId: string, password: string): Promise<boolean>;
     getBlocks(user: Principal): Promise<Array<string> | null>;
     getCallerUserProfile(): Promise<UserProfile | null>;
+    getCallerUserRole(): Promise<UserRole>;
     getMessagesForRoom(roomId: string): Promise<Array<Message> | null>;
     getMutes(user: Principal): Promise<Array<string> | null>;
     getRoom(id: string): Promise<Room | null>;
     getRoomsByLocation(location: string | null): Promise<Array<Room>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isCallerAdmin(): Promise<boolean>;
+    isUserBanned(user: Principal): Promise<boolean>;
     muteUser(targetUser: string): Promise<void>;
     reportContent(reportedUser: string | null, reportedMessage: string | null, room: string, reason: string): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     sendMessage(roomId: string, sender: string, content: string): Promise<Message>;
+    unbanUser(user: Principal): Promise<boolean>;
 }

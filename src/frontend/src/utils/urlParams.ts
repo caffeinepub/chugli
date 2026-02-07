@@ -34,7 +34,7 @@ export function getUrlParameter(paramName: string): string | null {
 
 /**
  * Stores a parameter in sessionStorage for persistence across navigation
- * Useful for maintaining state throughout the session
+ * Useful for maintaining state like admin tokens throughout the session
  *
  * @param key - The key to store the value under
  * @param value - The value to store
@@ -106,8 +106,8 @@ export function clearSessionParameter(key: string): void {
  * @param paramName - The parameter to remove from the hash
  *
  * @example
- * // URL: https://app.com/#/dashboard?token=xxx&other=value
- * // After clearParamFromHash('token')
+ * // URL: https://app.com/#/dashboard?caffeineAdminToken=xxx&other=value
+ * // After clearParamFromHash('caffeineAdminToken')
  * // URL: https://app.com/#/dashboard?other=value
  */
 function clearParamFromHash(paramName: string): void {
@@ -192,7 +192,7 @@ export function getSecretFromHash(paramName: string): string | null {
 
 /**
  * Gets a secret parameter with fallback chain: hash -> sessionStorage
- * This is the recommended way to handle sensitive parameters
+ * This is the recommended way to handle sensitive parameters like admin tokens
  *
  * Security benefits over regular URL params:
  * - Hash fragments are not sent to the server

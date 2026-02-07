@@ -2,10 +2,13 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-the-project-build-deployment-failure-so-the-app-can-successfully-build-and-deploy-backend-canister-frontend-assets-without-errors",
-      "featureTitle": "Fix the project build/deployment failure so the app can successfully build and deploy (backend canister + frontend assets) without errors.",
+      "featureId": "feature-update-the-frontend-room-deletion-ui-flows-in-room-controls-room-list-actions-menu-and-admin-moderation-room-panel-to-delete-rooms-using-the-room-password-prompt-instead-of-requiring-admin-internet-identity-ui-admin-unlock",
+      "featureTitle": "Update the frontend room deletion UI flows (in-room controls, room list actions menu, and admin moderation room panel) to delete rooms using the room password prompt instead of requiring admin Internet Identity + UI admin unlock.",
       "files": [
-        "frontend/src/utils/urlParams.ts"
+        "frontend/src/components/admin/AdminModerationPanels.tsx",
+        "frontend/src/components/chat/InRoomAdminControls.tsx",
+        "frontend/src/components/rooms/RoomActionsMenu.tsx",
+        "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -16,7 +19,49 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-frontend-room-creation-flow-to-collect-a-room-password-and-send-it-to-the-backend-when-creating-a-room-so-that-the-password-used-for-deletion-matches-what-was-set-at-creation-time",
+      "featureTitle": "Update frontend room creation flow to collect a room password and send it to the backend when creating a room, so that the password used for deletion matches what was set at creation time.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/RoomsPage.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-frontend-data-hooks-to-support-the-new-backend-api-for-deleting-rooms-by-password-and-to-invalidate-the-same-react-query-caches-currently-invalidated-by-useadmindeleteroom",
+      "featureTitle": "Update frontend data hooks to support the new backend API for deleting rooms by password and to invalidate the same React Query caches currently invalidated by useAdminDeleteRoom.",
+      "files": [
+        "frontend/src/components/admin/AdminModerationPanels.tsx",
+        "frontend/src/components/chat/InRoomAdminControls.tsx",
+        "frontend/src/components/rooms/RoomActionsMenu.tsx",
+        "frontend/src/hooks/useQueries.ts"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
       ],
       "confidence": "high"
     }

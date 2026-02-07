@@ -1,33 +1,63 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
-  "known_issues": [
-    "Deployment/build process encountered an error; user requested a retry."
+  "summary": "Room deletion authorization should be based on possession of the room password (anyone with the password can delete), rather than being restricted to a single internet identity.",
+  "architectural_notes": [
+    "Room deletion authorization should be password-based (shared secret) rather than bound to a specific internet identity."
   ],
-  "isFixRequest": true,
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-fix-the-project-build-deployment-failure-so-the-app-can-successfully-build-and-deploy-backend-canister-frontend-assets-without-errors",
-      "title": "Fix the project build/deployment failure so the app can successfully build and deploy (backend canister + frontend assets) without errors.",
+      "id": "feature-update-the-frontend-room-deletion-ui-flows-in-room-controls-room-list-actions-menu-and-admin-moderation-room-panel-to-delete-rooms-using-the-room-password-prompt-instead-of-requiring-admin-internet-identity-ui-admin-unlock",
+      "title": "Update the frontend room deletion UI flows (in-room controls, room list actions menu, and admin moderation room panel) to delete rooms using the room password prompt instead of requiring admin Internet Identity + UI admin unlock.",
       "reqIds": [
-        "REQ-1"
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-frontend-room-creation-flow-to-collect-a-room-password-and-send-it-to-the-backend-when-creating-a-room-so-that-the-password-used-for-deletion-matches-what-was-set-at-creation-time",
+      "title": "Update frontend room creation flow to collect a room password and send it to the backend when creating a room, so that the password used for deletion matches what was set at creation time.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-frontend-data-hooks-to-support-the-new-backend-api-for-deleting-rooms-by-password-and-to-invalidate-the-same-react-query-caches-currently-invalidated-by-useadmindeleteroom",
+      "title": "Update frontend data hooks to support the new backend API for deleting rooms by password and to invalidate the same React Query caches currently invalidated by useAdminDeleteRoom.",
+      "reqIds": [
+        "REQ-8"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [
     {
+      "id": "AR-1",
+      "summary": "Allow any user who knows the room password to delete the room (do not restrict deletion to a single internet identity).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
       "id": "AR-2",
-      "summary": "Remove admin-role management and any admin-only moderation functionality from the Motoko backend canister API so the product no longer exposes admin controls via the canister interface.",
+      "summary": "Change backend room-deletion authorization so that a room can be deleted by any caller who provides the correct room password, rather than requiring the caller to be an admin Internet Identity.",
       "reqIds": [
-        "REQ-2"
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Persist a room password in the backend so room deletion can be validated against the password that was set for that room at creation time.",
+      "reqIds": [
+        "REQ-5"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Retry deployment by fixing build errors and removing backend admin-role functionality",
+  "projectName": "Allow room deletion for anyone who knows the room password (not tied to a single Internet Identity)",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

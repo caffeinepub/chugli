@@ -1,51 +1,96 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix frontend build errors and remove client-side admin-token initialization",
+  "title": "Password-based room creation and deletion flows (frontend)",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Resolve frontend build/runtime failures by removing admin-token initialization and aligning frontend typings with the non-admin backend API so core chat flows work end-to-end.",
+      "id": "REQ-6",
+      "summary": "Update all room deletion UI entry points to prompt for the room password and delete via password-based backend method (not admin unlock/Internet Identity).",
       "acceptanceCriteria": [
-        "A clean build completes successfully for both backend and frontend (no TypeScript/Vite errors; no Motoko compile errors).",
-        "A deployment run completes successfully and results in a reachable frontend with the app shell rendering.",
-        "Core flows load without runtime errors in the browser console: rooms list renders, entering a room renders chat, and sending a message works."
+        "When a user initiates a room delete action, the UI prompts for the room password (user-facing text in English, e.g., “Enter room password to delete”).",
+        "Room deletion calls the new backend room-deletion-by-password method and handles success by refreshing room lists and navigating away from deleted rooms where applicable.",
+        "If deletion fails due to incorrect password or missing room, the UI shows a clear toast/dialog error message (in English) using the existing error-to-guidance pattern where applicable.",
+        "Room deletion UI is no longer gated by useAdminCapability (Internet Identity admin checks) for the purpose of deleting a room by password.",
+        "Admin-only capabilities remain in place for truly admin-only actions (e.g., deleteMessage/ban/unban) and are not loosened by this change."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useActor.ts",
+          "path": "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
+          "operation": "create",
+          "description": "Create a reusable room-deletion dialog that prompts for a room password (English copy like “Enter room password to delete”) and calls the password-based deletion mutation; use existing shadcn/ui Dialog/AlertDialog + Input components. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/chat/InRoomAdminControls.tsx",
           "operation": "modify",
-          "description": "Remove the admin-secret bootstrap call and any dependency on the secret URL parameter so the actor creation matches the non-admin backend API. Keep using the existing core infrastructure actor creation (`createActorWithConfig`) for authenticated/anonymous actors. Verify the component's usage instructions before implementing."
+          "description": "Replace the current admin-unlock-gated room deletion flow with the new password-prompt deletion flow (using RoomDeleteWithPasswordDialog). Ensure successful deletion triggers onRoomDeleted() and navigates away via parent callback; remove useAdminCapability/useAdminAccess gating for room deletion only. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/backend.d.ts",
+          "path": "frontend/src/components/rooms/RoomActionsMenu.tsx",
           "operation": "modify",
-          "description": "Update the generated backend type declarations to no longer require or expose admin-role management methods (e.g., role assignment/admin checks) so TypeScript reflects the updated canister interface and builds cleanly."
+          "description": "Make room deletion available without admin capability gating by using the password-prompt deletion dialog/mutation; keep menu visible to non-admin users and handle success/failure with toasts in English. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/utils/urlParams.ts",
+          "path": "frontend/src/components/admin/AdminModerationPanels.tsx",
           "operation": "modify",
-          "description": "Remove or neutralize admin-token-specific documentation/usage expectations (e.g., references to caffeine admin tokens) and ensure remaining helpers are still used safely by the app (no behavior change required beyond admin-token removal)."
+          "description": "Update the RoomManagementPanel room deletion action to use the password-prompt deletion flow (dialog + mutation) rather than useAdminCapability-gated deleteRoom; do not change other admin-only panels/actions (delete message, ban/unban) which must remain admin-gated. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/hooks/useAdminAccess.ts",
-          "operation": "delete",
-          "description": "Remove unused/placeholder admin hook file to avoid accidental future imports and keep the codebase aligned with the removal of admin functionality."
+          "path": "frontend/src/pages/ChatPage.tsx",
+          "operation": "modify",
+          "description": "Ensure the in-room deletion success path remains correct: after successful deletion, navigate away from the deleted room (existing onRoomDeleted handler) and avoid leaving the user on an invalid room view. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "summary": "Collect and validate a room password in the room creation UI and include it in the createRoom call.",
+      "acceptanceCriteria": [
+        "The room creation UI includes a password input field (English label/help text) and passes the password to the backend createRoom call.",
+        "The existing createRoom React Query mutation is updated to include the password parameter.",
+        "The room password is not displayed in room lists or room details views after creation.",
+        "Basic client-side validation exists to prevent creating a room with an empty password (or provides a clear English error)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Update the existing useCreateRoom mutation to accept a password parameter and call the backend createRoom with (name, location, password); keep existing rooms cache invalidation behavior unchanged. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/hooks/useAdminManagement.ts",
-          "operation": "delete",
-          "description": "Remove unused/placeholder admin management hook file to avoid accidental future imports and keep the codebase aligned with the removal of admin functionality."
+          "path": "frontend/src/pages/RoomsPage.tsx",
+          "operation": "modify",
+          "description": "Extend the Create Room dialog to include a password input (English Label/help text), add basic client-side validation for empty password (toast/error in English), and pass password through the updated useCreateRoom mutation; ensure the password is never displayed after creation. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "summary": "Add/update React Query mutations to delete rooms by password and invalidate the same caches as the previous admin delete room hook; migrate all call sites.",
+      "acceptanceCriteria": [
+        "A new React Query mutation exists (or the existing one is refactored) to call the backend delete-room-by-password method with (roomId, password).",
+        "On successful deletion, the same query keys are invalidated as before (rooms, room, messages for the deleted room) to keep UI consistent.",
+        "All UI call sites that delete rooms (InRoomAdminControls, RoomActionsMenu, AdminModerationPanels room deletion) use the password-based deletion mutation."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add a new password-based room deletion mutation (e.g., useDeleteRoomWithPassword) that calls the backend deleteRoomWithPassword(roomId, password), throws on false, and invalidates the same query keys as the old useAdminDeleteRoom (rooms, room, messages). Keep useAdminDeleteMessage/ban/unban unchanged. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
-          "operation": "delete",
-          "description": "Remove the unused/placeholder admin password prompt component so the frontend no longer contains admin-access UI artifacts."
+          "path": "frontend/src/components/chat/InRoomAdminControls.tsx",
+          "operation": "modify",
+          "description": "Switch room deletion to use the new password-based deletion mutation and remove reliance on useAdminDeleteRoom for room deletion. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/AdminPage.tsx",
-          "operation": "delete",
-          "description": "Remove the unused/placeholder admin page so the frontend no longer contains admin-only navigation targets."
+          "path": "frontend/src/components/rooms/RoomActionsMenu.tsx",
+          "operation": "modify",
+          "description": "Switch room deletion to use the new password-based deletion mutation and ensure the UI prompts for password and properly handles mutation pending state and errors. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/admin/AdminModerationPanels.tsx",
+          "operation": "modify",
+          "description": "Switch RoomManagementPanel room deletion to use the new password-based deletion mutation and ensure it invalidates/refreshes room lists as before; keep admin gating for other admin-only actions. Verify the component's usage instructions before implementing."
         }
       ]
     }

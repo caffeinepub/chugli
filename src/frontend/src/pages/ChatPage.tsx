@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useRoomMessages } from '../hooks/useQueries';
 import MessageList from '../components/chat/MessageList';
 import MessageComposer from '../components/chat/MessageComposer';
+import InRoomAdminControls from '../components/chat/InRoomAdminControls';
 
 export default function ChatPage() {
   const { roomId } = useParams({ from: '/chat/$roomId' });
@@ -11,6 +12,10 @@ export default function ChatPage() {
   const { data: messages, isLoading } = useRoomMessages(roomId, true);
 
   const handleLeave = () => {
+    navigate({ to: '/' });
+  };
+
+  const handleRoomDeleted = () => {
     navigate({ to: '/' });
   };
 
@@ -28,6 +33,9 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      {/* Admin Controls */}
+      <InRoomAdminControls roomId={roomId} onRoomDeleted={handleRoomDeleted} />
 
       {/* Messages */}
       <div className="flex-1 overflow-hidden">

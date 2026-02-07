@@ -1,4 +1,4 @@
-import { MapPin, User, Shield, Info, LogIn, LogOut, Loader2, Bug } from 'lucide-react';
+import { MapPin, User, Shield, Info, LogIn, LogOut, Loader2, Bug, Lock, Unlock } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { useAreaSelection } from '../hooks/useAreaSelection';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useAuthControls } from '../hooks/useAuthControls';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useAdminAccess } from '../hooks/useAdminAccess';
 import { AVAILABLE_AREAS, ALL_AREAS_ID } from '../storage/areaSelectionStorage';
 import { toast } from 'sonner';
 import { useState, useMemo } from 'react';
@@ -30,9 +31,11 @@ export default function SettingsPage() {
   } = useUserProfile();
   const { isAuthenticated, logout, isLoggingIn } = useAuthControls();
   const { identity } = useInternetIdentity();
+  const { isUnlocked, unlock, lock, error: adminError } = useAdminAccess();
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
 
   // Sort areas alphabetically, keeping "All areas" first
   const sortedAreas = useMemo(() => {
@@ -115,6 +118,24 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAdminClick = () => {
+    navigate({ to: '/admin' });
+  };
+
+  const handleAdminUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    const success = unlock(adminPassword);
+    if (success) {
+      setAdminPassword('');
+      toast.success('Admin access unlocked');
+    }
+  };
+
+  const handleAdminLock = () => {
+    lock();
+    toast.success('Admin access locked');
+  };
+
   const showProfileSetup = isAuthenticated && isFetched;
   const showCreateProfileButton = isAuthenticated && isFetched && !profile && !profileLoading;
 
@@ -171,6 +192,65 @@ export default function SettingsPage() {
                 </Button>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Separator />
+
+        {/* Admin Access */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {isUnlocked ? <Unlock className="h-5 w-5 text-primary" /> : <Lock className="h-5 w-5 text-primary" />}
+              Admin Access
+            </CardTitle>
+            <CardDescription>
+              {isUnlocked 
+                ? 'Admin access is unlocked. You can perform moderation actions without re-entering the password.'
+                : 'Unlock admin access to perform moderation actions across the app'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!isUnlocked ? (
+              <form onSubmit={handleAdminUnlock} className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="admin-password">Admin Password</Label>
+                  <Input
+                    id="admin-password"
+                    type="password"
+                    placeholder="Enter admin password"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                  />
+                  {adminError && (
+                    <p className="text-sm text-destructive">{adminError}</p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full">
+                  <Unlock className="h-4 w-4 mr-2" />
+                  Unlock Admin Access
+                </Button>
+              </form>
+            ) : (
+              <div className="space-y-3">
+                <Alert>
+                  <Shield className="h-4 w-4" />
+                  <AlertDescription>
+                    Admin access is active. You can delete rooms, messages, and manage users without re-entering the password.
+                  </AlertDescription>
+                </Alert>
+                <div className="flex gap-2">
+                  <Button onClick={handleAdminClick} className="flex-1">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Open Admin Panel
+                  </Button>
+                  <Button onClick={handleAdminLock} variant="outline">
+                    <Lock className="h-4 w-4 mr-2" />
+                    Lock
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

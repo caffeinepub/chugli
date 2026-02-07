@@ -1,39 +1,76 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T13:11:15.910Z",
+  "generatedAt": "2026-02-07T15:18:18.021Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 1,
+    "total": 5,
+    "implemented": 3,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Fix the project build/deployment failure so the app can successfully build and deploy (backend canister + frontend assets) without errors.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useActor.ts",
-          "frontend/src/backend.d.ts",
-          "frontend/src/utils/urlParams.ts",
-          "frontend/src/hooks/useAdminAccess.ts",
-          "frontend/src/hooks/useAdminManagement.ts",
-          "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
-          "frontend/src/pages/AdminPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/backend.d.ts",
-          "frontend/src/utils/urlParams.ts"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Remove admin-role management and any admin-only moderation functionality from the Motoko backend canister API so the product no longer exposes admin controls via the canister interface.",
+        "id": "REQ-4",
+        "summary": "Change backend room-deletion authorization so that a room can be deleted by any caller who provides the correct room password, rather than requiring the caller to be an admin Internet Identity.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Persist a room password in the backend so room deletion can be validated against the password that was set for that room at creation time.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Update the frontend room deletion UI flows (in-room controls, room list actions menu, and admin moderation room panel) to delete rooms using the room password prompt instead of requiring admin Internet Identity + UI admin unlock.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
+          "frontend/src/components/chat/InRoomAdminControls.tsx",
+          "frontend/src/components/rooms/RoomActionsMenu.tsx",
+          "frontend/src/components/admin/AdminModerationPanels.tsx",
+          "frontend/src/pages/ChatPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
+          "frontend/src/components/chat/InRoomAdminControls.tsx",
+          "frontend/src/components/rooms/RoomActionsMenu.tsx",
+          "frontend/src/components/admin/AdminModerationPanels.tsx"
+        ]
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Update frontend room creation flow to collect a room password and send it to the backend when creating a room, so that the password used for deletion matches what was set at creation time.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/RoomsPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/RoomsPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-8",
+        "summary": "Update frontend data hooks to support the new backend API for deleting rooms by password and to invalidate the same React Query caches currently invalidated by useAdminDeleteRoom.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/chat/InRoomAdminControls.tsx",
+          "frontend/src/components/rooms/RoomActionsMenu.tsx",
+          "frontend/src/components/admin/AdminModerationPanels.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/chat/InRoomAdminControls.tsx",
+          "frontend/src/components/rooms/RoomActionsMenu.tsx",
+          "frontend/src/components/admin/AdminModerationPanels.tsx"
+        ]
       }
     ]
   },
@@ -45,7 +82,15 @@
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
-    "frontend/src/utils/urlParams.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/admin/AdminModerationPanels.tsx",
+    "frontend/src/components/chat/InRoomAdminControls.tsx",
+    "frontend/src/components/rooms/RoomActionsMenu.tsx",
+    "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/RoomsPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
