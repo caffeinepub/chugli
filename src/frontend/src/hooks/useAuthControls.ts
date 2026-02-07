@@ -19,7 +19,7 @@ export function useAuthControls() {
    */
   const safeLogin = useCallback(async () => {
     try {
-      login();
+      await login();
     } catch (error: any) {
       if (error.message === 'User is already authenticated') {
         // Clear and retry

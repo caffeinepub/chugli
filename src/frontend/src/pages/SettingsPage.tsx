@@ -1,4 +1,4 @@
-import { MapPin, User, Shield, Info, LogIn, LogOut, Loader2 } from 'lucide-react';
+import { MapPin, User, Shield, Info, LogIn, LogOut, Loader2, Bug } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAreaSelection } from '../hooks/useAreaSelection';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useAuthControls } from '../hooks/useAuthControls';
-import { setPostLoginRedirect } from '../utils/auth/postLoginRedirect';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { AVAILABLE_AREAS, ALL_AREAS_ID } from '../storage/areaSelectionStorage';
 import { toast } from 'sonner';
 import { useState, useMemo } from 'react';
@@ -29,6 +29,7 @@ export default function SettingsPage() {
     isProfileReady,
   } = useUserProfile();
   const { isAuthenticated, logout, isLoggingIn } = useAuthControls();
+  const { identity } = useInternetIdentity();
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isCreatingProfile, setIsCreatingProfile] = useState(false);
@@ -101,7 +102,6 @@ export default function SettingsPage() {
   };
 
   const handleLoginClick = () => {
-    setPostLoginRedirect('/settings');
     navigate({ to: '/login' });
   };
 
@@ -117,6 +117,10 @@ export default function SettingsPage() {
 
   const showProfileSetup = isAuthenticated && isFetched;
   const showCreateProfileButton = isAuthenticated && isFetched && !profile && !profileLoading;
+
+  // Get principal for display
+  const principalString = identity?.getPrincipal().toString() || null;
+  const isAnonymous = !identity || identity.getPrincipal().isAnonymous();
 
   return (
     <div className="container h-full overflow-auto px-4 py-6">
@@ -166,6 +170,33 @@ export default function SettingsPage() {
                   Log in
                 </Button>
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Separator />
+
+        {/* Account Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bug className="h-5 w-5" />
+              Account Information
+            </CardTitle>
+            <CardDescription>
+              Your identity information
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Principal ID</Label>
+              <div className="p-3 rounded-lg bg-muted/50 font-mono text-xs break-all">
+                {isAnonymous ? (
+                  <span className="text-muted-foreground">Anonymous</span>
+                ) : (
+                  principalString
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -335,7 +366,7 @@ export default function SettingsPage() {
             href="https://caffeine.ai"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary hover:underline"
+            className="underline hover:text-foreground transition-colors"
           >
             caffeine.ai
           </a>

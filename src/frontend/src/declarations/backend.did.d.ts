@@ -18,15 +18,6 @@ export interface Message {
   'timestamp' : Time,
   'roomId' : string,
 }
-export interface Report {
-  'id' : string,
-  'reportedUser' : [] | [string],
-  'room' : string,
-  'timestamp' : Time,
-  'reportedMessage' : [] | [string],
-  'reporter' : string,
-  'reason' : string,
-}
 export interface Room {
   'id' : string,
   'creator' : Principal,
@@ -46,40 +37,20 @@ export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
 export interface _SERVICE {
-  '_getInternalState' : ActorMethod<
-    [],
-    {
-      'bannedUsers' : Array<Principal>,
-      'messageCounter' : bigint,
-      'mutes' : Array<[Principal, Array<string>]>,
-      'messages' : Array<[string, Array<Message>]>,
-      'roomCounter' : bigint,
-      'reportCounter' : bigint,
-      'blocks' : Array<[Principal, Array<string>]>,
-      'reports' : Array<[string, Array<Report>]>,
-      'profiles' : Array<[Principal, UserProfile]>,
-      'rooms' : Array<[string, Room]>,
-    }
-  >,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'banUser' : ActorMethod<[Principal], undefined>,
   'blockUser' : ActorMethod<[string], undefined>,
   'createRoom' : ActorMethod<[string, [] | [string]], Room>,
   'deleteCallerUserProfile' : ActorMethod<[], undefined>,
-  'deleteMessage' : ActorMethod<[string, string], undefined>,
-  'deleteRoom' : ActorMethod<[string], undefined>,
   'getBlocks' : ActorMethod<[Principal], [] | [Array<string>]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getMessagesForRoom' : ActorMethod<[string], [] | [Array<Message>]>,
   'getMutes' : ActorMethod<[Principal], [] | [Array<string>]>,
-  'getReportsForRoom' : ActorMethod<[string], [] | [Array<Report>]>,
   'getRoom' : ActorMethod<[string], [] | [Room]>,
   'getRoomsByLocation' : ActorMethod<[[] | [string]], Array<Room>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'isUserBanned' : ActorMethod<[Principal], boolean>,
   'muteUser' : ActorMethod<[string], undefined>,
   'reportContent' : ActorMethod<
     [[] | [string], [] | [string], string, string],
@@ -87,7 +58,6 @@ export interface _SERVICE {
   >,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'sendMessage' : ActorMethod<[string, string, string], Message>,
-  'unbanUser' : ActorMethod<[Principal], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

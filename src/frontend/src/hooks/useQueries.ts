@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { ALL_AREAS_ID } from '../storage/areaSelectionStorage';
 import type { Room, Message } from '../backend';
-import { Principal } from '@dfinity/principal';
 
 export function useGetRoomsByLocation(location: string | null) {
   const { actor, isFetching } = useActor();
@@ -144,114 +143,5 @@ export function useReportContent() {
       if (!actor) throw new Error('Actor not available');
       return actor.reportContent(reportedUser, reportedMessage, room, reason);
     },
-  });
-}
-
-// Admin moderation hooks
-export function useIsAdmin() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<boolean>({
-    queryKey: ['isAdmin'],
-    queryFn: async () => {
-      if (!actor) return false;
-      try {
-        return await actor.isCallerAdmin();
-      } catch (error) {
-        return false;
-      }
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-export function useDeleteRoom() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (roomId: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.deleteRoom(roomId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-    },
-    onError: (error) => {
-      throw error;
-    },
-  });
-}
-
-export function useDeleteMessage() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ roomId, messageId }: { roomId: string; messageId: string }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.deleteMessage(roomId, messageId);
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['messages', variables.roomId] });
-    },
-    onError: (error) => {
-      throw error;
-    },
-  });
-}
-
-export function useBanUser() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (userPrincipal: Principal) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.banUser(userPrincipal);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages'] });
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-    },
-    onError: (error) => {
-      throw error;
-    },
-  });
-}
-
-export function useUnbanUser() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (userPrincipal: Principal) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.unbanUser(userPrincipal);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages'] });
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-    },
-    onError: (error) => {
-      throw error;
-    },
-  });
-}
-
-export function useIsUserBanned(userPrincipal: Principal | null) {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<boolean>({
-    queryKey: ['isUserBanned', userPrincipal?.toString()],
-    queryFn: async () => {
-      if (!actor || !userPrincipal) return false;
-      try {
-        return await actor.isUserBanned(userPrincipal);
-      } catch (error) {
-        return false;
-      }
-    },
-    enabled: !!actor && !isFetching && !!userPrincipal,
   });
 }

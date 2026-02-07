@@ -27,6 +27,9 @@ export default function LoginPage() {
     login();
   };
 
+  // Filter out "already authenticated" errors from display
+  const shouldShowError = isLoginError && loginError && loginError.message !== 'User is already authenticated';
+
   return (
     <div className="container h-full flex items-center justify-center px-4 py-6">
       <Card className="w-full max-w-md">
@@ -40,7 +43,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isLoginError && loginError && (
+          {shouldShowError && (
             <Alert variant="destructive">
               <AlertDescription>
                 {loginError.message || 'Login failed. Please try again.'}

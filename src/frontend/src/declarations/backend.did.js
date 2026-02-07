@@ -8,23 +8,18 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const Time = IDL.Int;
-export const Message = IDL.Record({
-  'id' : IDL.Text,
-  'content' : IDL.Text,
-  'sender' : IDL.Text,
-  'senderPrincipal' : IDL.Opt(IDL.Principal),
-  'timestamp' : Time,
-  'roomId' : IDL.Text,
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
 });
-export const Report = IDL.Record({
+export const Time = IDL.Int;
+export const Room = IDL.Record({
   'id' : IDL.Text,
-  'reportedUser' : IDL.Opt(IDL.Text),
-  'room' : IDL.Text,
-  'timestamp' : Time,
-  'reportedMessage' : IDL.Opt(IDL.Text),
-  'reporter' : IDL.Text,
-  'reason' : IDL.Text,
+  'creator' : IDL.Principal,
+  'name' : IDL.Text,
+  'createdTimestamp' : Time,
+  'location' : IDL.Opt(IDL.Text),
 });
 export const UserProfile = IDL.Record({
   'bio' : IDL.Text,
@@ -33,46 +28,21 @@ export const UserProfile = IDL.Record({
   'lastUpdated' : Time,
   'avatarURL' : IDL.Text,
 });
-export const Room = IDL.Record({
+export const Message = IDL.Record({
   'id' : IDL.Text,
-  'creator' : IDL.Principal,
-  'name' : IDL.Text,
-  'createdTimestamp' : Time,
-  'location' : IDL.Opt(IDL.Text),
-});
-export const UserRole = IDL.Variant({
-  'admin' : IDL.Null,
-  'user' : IDL.Null,
-  'guest' : IDL.Null,
+  'content' : IDL.Text,
+  'sender' : IDL.Text,
+  'senderPrincipal' : IDL.Opt(IDL.Principal),
+  'timestamp' : Time,
+  'roomId' : IDL.Text,
 });
 
 export const idlService = IDL.Service({
-  '_getInternalState' : IDL.Func(
-      [],
-      [
-        IDL.Record({
-          'bannedUsers' : IDL.Vec(IDL.Principal),
-          'messageCounter' : IDL.Nat,
-          'mutes' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(IDL.Text))),
-          'messages' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(Message))),
-          'roomCounter' : IDL.Nat,
-          'reportCounter' : IDL.Nat,
-          'blocks' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(IDL.Text))),
-          'reports' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(Report))),
-          'profiles' : IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile)),
-          'rooms' : IDL.Vec(IDL.Tuple(IDL.Text, Room)),
-        }),
-      ],
-      ['query'],
-    ),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'banUser' : IDL.Func([IDL.Principal], [], []),
   'blockUser' : IDL.Func([IDL.Text], [], []),
   'createRoom' : IDL.Func([IDL.Text, IDL.Opt(IDL.Text)], [Room], []),
   'deleteCallerUserProfile' : IDL.Func([], [], []),
-  'deleteMessage' : IDL.Func([IDL.Text, IDL.Text], [], []),
-  'deleteRoom' : IDL.Func([IDL.Text], [], []),
   'getBlocks' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(IDL.Vec(IDL.Text))],
@@ -90,11 +60,6 @@ export const idlService = IDL.Service({
       [IDL.Opt(IDL.Vec(IDL.Text))],
       ['query'],
     ),
-  'getReportsForRoom' : IDL.Func(
-      [IDL.Text],
-      [IDL.Opt(IDL.Vec(Report))],
-      ['query'],
-    ),
   'getRoom' : IDL.Func([IDL.Text], [IDL.Opt(Room)], ['query']),
   'getRoomsByLocation' : IDL.Func(
       [IDL.Opt(IDL.Text)],
@@ -107,7 +72,6 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'isUserBanned' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
   'muteUser' : IDL.Func([IDL.Text], [], []),
   'reportContent' : IDL.Func(
       [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
@@ -116,29 +80,23 @@ export const idlService = IDL.Service({
     ),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'sendMessage' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [Message], []),
-  'unbanUser' : IDL.Func([IDL.Principal], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const Time = IDL.Int;
-  const Message = IDL.Record({
-    'id' : IDL.Text,
-    'content' : IDL.Text,
-    'sender' : IDL.Text,
-    'senderPrincipal' : IDL.Opt(IDL.Principal),
-    'timestamp' : Time,
-    'roomId' : IDL.Text,
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
   });
-  const Report = IDL.Record({
+  const Time = IDL.Int;
+  const Room = IDL.Record({
     'id' : IDL.Text,
-    'reportedUser' : IDL.Opt(IDL.Text),
-    'room' : IDL.Text,
-    'timestamp' : Time,
-    'reportedMessage' : IDL.Opt(IDL.Text),
-    'reporter' : IDL.Text,
-    'reason' : IDL.Text,
+    'creator' : IDL.Principal,
+    'name' : IDL.Text,
+    'createdTimestamp' : Time,
+    'location' : IDL.Opt(IDL.Text),
   });
   const UserProfile = IDL.Record({
     'bio' : IDL.Text,
@@ -147,46 +105,21 @@ export const idlFactory = ({ IDL }) => {
     'lastUpdated' : Time,
     'avatarURL' : IDL.Text,
   });
-  const Room = IDL.Record({
+  const Message = IDL.Record({
     'id' : IDL.Text,
-    'creator' : IDL.Principal,
-    'name' : IDL.Text,
-    'createdTimestamp' : Time,
-    'location' : IDL.Opt(IDL.Text),
-  });
-  const UserRole = IDL.Variant({
-    'admin' : IDL.Null,
-    'user' : IDL.Null,
-    'guest' : IDL.Null,
+    'content' : IDL.Text,
+    'sender' : IDL.Text,
+    'senderPrincipal' : IDL.Opt(IDL.Principal),
+    'timestamp' : Time,
+    'roomId' : IDL.Text,
   });
   
   return IDL.Service({
-    '_getInternalState' : IDL.Func(
-        [],
-        [
-          IDL.Record({
-            'bannedUsers' : IDL.Vec(IDL.Principal),
-            'messageCounter' : IDL.Nat,
-            'mutes' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(IDL.Text))),
-            'messages' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(Message))),
-            'roomCounter' : IDL.Nat,
-            'reportCounter' : IDL.Nat,
-            'blocks' : IDL.Vec(IDL.Tuple(IDL.Principal, IDL.Vec(IDL.Text))),
-            'reports' : IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(Report))),
-            'profiles' : IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile)),
-            'rooms' : IDL.Vec(IDL.Tuple(IDL.Text, Room)),
-          }),
-        ],
-        ['query'],
-      ),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'banUser' : IDL.Func([IDL.Principal], [], []),
     'blockUser' : IDL.Func([IDL.Text], [], []),
     'createRoom' : IDL.Func([IDL.Text, IDL.Opt(IDL.Text)], [Room], []),
     'deleteCallerUserProfile' : IDL.Func([], [], []),
-    'deleteMessage' : IDL.Func([IDL.Text, IDL.Text], [], []),
-    'deleteRoom' : IDL.Func([IDL.Text], [], []),
     'getBlocks' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(IDL.Vec(IDL.Text))],
@@ -204,11 +137,6 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(IDL.Vec(IDL.Text))],
         ['query'],
       ),
-    'getReportsForRoom' : IDL.Func(
-        [IDL.Text],
-        [IDL.Opt(IDL.Vec(Report))],
-        ['query'],
-      ),
     'getRoom' : IDL.Func([IDL.Text], [IDL.Opt(Room)], ['query']),
     'getRoomsByLocation' : IDL.Func(
         [IDL.Opt(IDL.Text)],
@@ -221,7 +149,6 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'isUserBanned' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'muteUser' : IDL.Func([IDL.Text], [], []),
     'reportContent' : IDL.Func(
         [IDL.Opt(IDL.Text), IDL.Opt(IDL.Text), IDL.Text, IDL.Text],
@@ -230,7 +157,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'sendMessage' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [Message], []),
-    'unbanUser' : IDL.Func([IDL.Principal], [], []),
   });
 };
 

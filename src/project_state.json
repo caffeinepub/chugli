@@ -1,73 +1,33 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Rooms-based app with Internet Identity login; users report inconsistent room visibility across devices and want owner-only moderation controls (delete rooms/messages, ban users).",
-  "architectural_notes": [
-    "Implement role/permission checks based on the authenticated Internet Identity (e.g., owner/admin vs regular users) for destructive actions like deleting rooms/messages and banning users."
-  ],
+  "summary": "New project",
+  "architectural_notes": [],
   "known_issues": [
-    "Rooms list shows 'No rooms found' on laptop while rooms are visible on phone (likely stale cached state/area selection/service worker)."
+    "Deployment/build process encountered an error; user requested a retry."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-add-frontend-admin-gated-ui-controls-when-the-logged-in-user-is-admin-show-options-to-1-delete-a-message-and-2-ban-unban-the-message-sender-within-the-per-message-actions-menu-and-show-an-option-to-delete-a-room-from-the-room-chat-ui-these-controls-must-not-be-visible-to-non-admin-users",
-      "title": "Add frontend admin-gated UI controls: when the logged-in user is admin, show options to (1) delete a message and (2) ban/unban the message sender within the per-message actions menu; and show an option to delete a room from the room/chat UI. These controls must not be visible to non-admin users.",
+      "id": "feature-fix-the-project-build-deployment-failure-so-the-app-can-successfully-build-and-deploy-backend-canister-frontend-assets-without-errors",
+      "title": "Fix the project build/deployment failure so the app can successfully build and deploy (backend canister + frontend assets) without errors.",
       "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-react-query-hooks-mutations-for-the-new-backend-admin-endpoints-isadmin-query-deleteroom-deletemessage-banuser-unbanuser-and-ensure-relevant-cached-queries-are-invalidated-so-the-ui-updates-immediately-rooms-list-messages-list",
-      "title": "Add React Query hooks/mutations for the new backend admin endpoints (isAdmin query, deleteRoom, deleteMessage, banUser, unbanUser) and ensure relevant cached queries are invalidated so the UI updates immediately (rooms list, messages list).",
-      "reqIds": [
-        "REQ-6"
+        "REQ-1"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [
     {
-      "id": "AR-1",
-      "summary": "Add admin/moderation permissions tied to a specific Internet Identity so only the owner can delete rooms, delete messages, and ban users.",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
       "id": "AR-2",
-      "summary": "Implement an owner/admin permission model tied to Internet Identity so that only the app owner (admin) can perform destructive moderation actions (delete rooms, delete messages, ban/unban users). The first authenticated principal to initialize the canister should become the immutable owner/admin (unless an owner/admin already exists in state).",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Add backend support for global bans enforced by principal: store a persistent list of banned principals and prevent banned principals from creating rooms and sending messages.",
+      "summary": "Remove admin-role management and any admin-only moderation functionality from the Motoko backend canister API so the product no longer exposes admin controls via the canister interface.",
       "reqIds": [
         "REQ-2"
       ],
       "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Add admin-only backend methods to delete a room and delete a message. Deleting a room must remove the room and its associated message list (and any associated room-scoped reports, if stored by room key). Deleting a message must remove it from the room’s message list by message ID.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Extend the backend Message model so each message includes the sender’s Principal (in addition to the existing display sender Text), so the frontend can target the correct identity for admin actions like ban. Add conditional state migration to preserve existing stored messages by backfilling senderPrincipal for old messages.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "status": "pending"
     }
   ],
-  "projectName": "Owner-only admin moderation (delete room/message, ban users) via Internet Identity",
+  "projectName": "Retry deployment by fixing build errors and removing backend admin-role functionality",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

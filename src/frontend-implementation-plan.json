@@ -1,48 +1,51 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Admin-gated moderation UI (delete room/message, ban/unban) with React Query",
+  "title": "Fix frontend build errors and remove client-side admin-token initialization",
   "requirements": [
     {
-      "id": "REQ-5",
-      "summary": "Render admin-only moderation controls in chat UI for deleting rooms/messages and banning/unbanning message senders.",
+      "id": "REQ-1",
+      "summary": "Resolve frontend build/runtime failures by removing admin-token initialization and aligning frontend typings with the non-admin backend API so core chat flows work end-to-end.",
       "acceptanceCriteria": [
-        "When not logged in or logged in as a non-admin, the UI does not render admin-only actions (delete room, delete message, ban/unban).",
-        "When logged in as admin, MessageActionsMenu includes 'Delete Message' and 'Ban User' (and 'Unban User' where applicable) and these actions call the backend and update UI state.",
-        "When logged in as admin, the UI provides a 'Delete Room' action accessible from the chat/room context with a confirmation dialog.",
-        "All new user-facing UI strings are in English."
+        "A clean build completes successfully for both backend and frontend (no TypeScript/Vite errors; no Motoko compile errors).",
+        "A deployment run completes successfully and results in a reachable frontend with the app shell rendering.",
+        "Core flows load without runtime errors in the browser console: rooms list renders, entering a room renders chat, and sending a message works."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/chat/MessageActionsMenu.tsx",
+          "path": "frontend/src/hooks/useActor.ts",
           "operation": "modify",
-          "description": "Add admin-gated actions to the per-message dropdown: delete message and ban/unban sender. Use the authorization component’s Internet Identity integration patterns to determine whether the caller is admin via an isAdmin query, and only render these items for admins. For ban/unban, rely on senderPrincipal when present; if missing, disable the action with an English explanation. Show confirmation dialogs for destructive actions, and show success/error toasts for each action. Verify the component's usage instructions before implementing."
+          "description": "Remove the admin-secret bootstrap call and any dependency on the secret URL parameter so the actor creation matches the non-admin backend API. Keep using the existing core infrastructure actor creation (`createActorWithConfig`) for authenticated/anonymous actors. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/chat/MessageList.tsx",
+          "path": "frontend/src/backend.d.ts",
           "operation": "modify",
-          "description": "Adjust message rendering so admin-only MessageActionsMenu controls can be accessed in a way that still keeps them hidden for non-admin users (e.g., keep hover UI but allow admin actions to appear based on admin status). Ensure the menu continues to receive message.senderPrincipal when available. Verify the component's usage instructions before implementing."
+          "description": "Update the generated backend type declarations to no longer require or expose admin-role management methods (e.g., role assignment/admin checks) so TypeScript reflects the updated canister interface and builds cleanly."
         },
         {
-          "path": "frontend/src/pages/ChatPage.tsx",
+          "path": "frontend/src/utils/urlParams.ts",
           "operation": "modify",
-          "description": "Add an admin-only 'Delete Room' action in the chat header (room context), protected by the isAdmin query so it is never visible to non-admins/guests. Include an English confirmation dialog, call the deleteRoom mutation, and navigate back to Rooms on success. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Add React Query queries/mutations for admin moderation functions and invalidate caches so UI updates immediately.",
-      "acceptanceCriteria": [
-        "After deleting a message, the messages query for that room is invalidated/refetched and the message disappears without a full page reload.",
-        "After deleting a room, the rooms query is invalidated/refetched and the room disappears from the Rooms page; if user is currently in that chat, the UI navigates away gracefully (e.g., back to Rooms).",
-        "Ban/unban actions show success/error toasts and invalidate any necessary queries (at minimum messages/rooms as needed)."
-      ],
-      "file_operations": [
+          "description": "Remove or neutralize admin-token-specific documentation/usage expectations (e.g., references to caffeine admin tokens) and ensure remaining helpers are still used safely by the app (no behavior change required beyond admin-token removal)."
+        },
         {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add React Query hooks for admin moderation backend capabilities: an isAdmin query (wrapping isCallerAdmin) and mutations for deleteRoom, deleteMessage, banUser, unbanUser, plus an isUserBanned query to drive the Ban/Unban label. Ensure onSuccess invalidates/refetches relevant caches (at minimum ['messages', roomId] after deleteMessage; all rooms queries after deleteRoom; and appropriate messages/rooms queries after ban/unban). Keep errors surfaced to the UI so callers can show English toasts. Verify the component's usage instructions before implementing."
+          "path": "frontend/src/hooks/useAdminAccess.ts",
+          "operation": "delete",
+          "description": "Remove unused/placeholder admin hook file to avoid accidental future imports and keep the codebase aligned with the removal of admin functionality."
+        },
+        {
+          "path": "frontend/src/hooks/useAdminManagement.ts",
+          "operation": "delete",
+          "description": "Remove unused/placeholder admin management hook file to avoid accidental future imports and keep the codebase aligned with the removal of admin functionality."
+        },
+        {
+          "path": "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
+          "operation": "delete",
+          "description": "Remove the unused/placeholder admin password prompt component so the frontend no longer contains admin-access UI artifacts."
+        },
+        {
+          "path": "frontend/src/pages/AdminPage.tsx",
+          "operation": "delete",
+          "description": "Remove the unused/placeholder admin page so the frontend no longer contains admin-only navigation targets."
         }
       ]
     }

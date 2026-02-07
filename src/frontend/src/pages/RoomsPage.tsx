@@ -11,7 +11,7 @@ import { useRoomsByLocation, useCreateRoom } from '../hooks/useQueries';
 import { useAreaSelection } from '../hooks/useAreaSelection';
 import { useAuthControls } from '../hooks/useAuthControls';
 import { setPostLoginRedirect } from '../utils/auth/postLoginRedirect';
-import { isAuthError } from '../utils/auth/isAuthError';
+import { isAuthError, extractErrorMessage } from '../utils/auth/isAuthError';
 import { ALL_AREAS_ID } from '../storage/areaSelectionStorage';
 import { toast } from 'sonner';
 
@@ -98,13 +98,17 @@ export default function RoomsPage() {
       setIsDialogOpen(false);
       setRoomName('');
     } catch (error) {
+      // Check if this is an authentication/authorization error
       if (isAuthError(error)) {
         toast.error('Please log in to create a room');
         setIsDialogOpen(false);
-        handleLoginClick();
+        setPostLoginRedirect('/');
+        navigate({ to: '/login' });
       } else {
-        toast.error('Failed to create room');
-        console.error(error);
+        // For other errors, show the backend error message for diagnosis
+        const errorMsg = extractErrorMessage(error);
+        toast.error(`Failed to create room: ${errorMsg}`);
+        console.error('Room creation error:', error);
       }
     }
   };
