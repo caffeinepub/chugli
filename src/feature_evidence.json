@@ -2,13 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-frontend-room-deletion-ui-flows-in-room-controls-room-list-actions-menu-and-admin-moderation-room-panel-to-delete-rooms-using-the-room-password-prompt-instead-of-requiring-admin-internet-identity-ui-admin-unlock",
-      "featureTitle": "Update the frontend room deletion UI flows (in-room controls, room list actions menu, and admin moderation room panel) to delete rooms using the room password prompt instead of requiring admin Internet Identity + UI admin unlock.",
+      "featureId": "feature-align-the-backend-shared-admin-password-used-for-admin-privilege-escalation-and-room-deletion-password-validation-with-the-frontend-ui-admin-password-so-users-can-unlock-admin-and-successfully-perform-password-protected-room-deletion-using-the-same-password",
+      "featureTitle": "Align the backend shared admin password used for admin privilege escalation and room deletion password validation with the frontend UI admin password so users can unlock admin and successfully perform password-protected room deletion using the same password.",
       "files": [
-        "frontend/src/components/admin/AdminModerationPanels.tsx",
-        "frontend/src/components/chat/InRoomAdminControls.tsx",
-        "frontend/src/components/rooms/RoomActionsMenu.tsx",
-        "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx"
+        "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
+        "frontend/src/hooks/useAdminManagement.ts"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -19,16 +17,18 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-6"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-frontend-room-creation-flow-to-collect-a-room-password-and-send-it-to-the-backend-when-creating-a-room-so-that-the-password-used-for-deletion-matches-what-was-set-at-creation-time",
-      "featureTitle": "Update frontend room creation flow to collect a room password and send it to the backend when creating a room, so that the password used for deletion matches what was set at creation time.",
+      "featureId": "feature-update-the-frontend-admin-capability-gating-so-that-admin-operations-depend-on-a-the-ui-password-unlock-state-and-b-backend-confirmed-admin-status-after-password-based-admin-granting-and-do-not-require-internet-identity-login-solely-for-admin-access",
+      "featureTitle": "Update the frontend admin capability gating so that admin operations depend on (a) the UI password unlock state and (b) backend-confirmed admin status after password-based admin granting, and do not require Internet Identity login solely for admin access.",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/RoomsPage.tsx"
+        "frontend/src/components/admin/AdminModerationPanels.tsx",
+        "frontend/src/components/chat/MessageActionsMenu.tsx",
+        "frontend/src/hooks/useAdminManagement.ts",
+        "frontend/src/pages/AdminPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -39,18 +39,17 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-7"
+        "REQ-3"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-frontend-data-hooks-to-support-the-new-backend-api-for-deleting-rooms-by-password-and-to-invalidate-the-same-react-query-caches-currently-invalidated-by-useadmindeleteroom",
-      "featureTitle": "Update frontend data hooks to support the new backend API for deleting rooms by password and to invalidate the same React Query caches currently invalidated by useAdminDeleteRoom.",
+      "featureId": "feature-update-the-admin-page-ux-copy-and-conditional-alerts-to-reflect-password-based-admin-access-remove-or-adjust-messaging-that-implies-the-user-must-log-in-with-an-admin-internet-identity-account-to-gain-admin-privileges",
+      "featureTitle": "Update the Admin page UX copy and conditional alerts to reflect password-based admin access (remove or adjust messaging that implies the user must log in with an admin Internet Identity account to gain admin privileges).",
       "files": [
-        "frontend/src/components/admin/AdminModerationPanels.tsx",
-        "frontend/src/components/chat/InRoomAdminControls.tsx",
-        "frontend/src/components/rooms/RoomActionsMenu.tsx",
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
+        "frontend/src/hooks/useAdminManagement.ts",
+        "frontend/src/pages/AdminPage.tsx"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -61,7 +60,7 @@
         "authorization@4.0.0"
       ],
       "testIds": [
-        "REQ-8"
+        "REQ-4"
       ],
       "confidence": "high"
     }

@@ -1,64 +1,85 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T15:18:18.019Z",
-  "summary": "The diff adds password collection/storage on room creation and introduces a password-prompt deletion dialog used in multiple UI entry points. However, the backend password-based delete API and its required authorization/error semantics are not evidenced in the provided backend diff, and the frontend still gates deletion behind admin unlock/capability in at least two flows. A migration module was also added, which conflicts with the stated constraints unless strictly required.",
+  "generatedAt": "2026-02-07T15:56:21.245Z",
+  "summary": "Diff adds new frontend admin-gating UI and backend migration scaffolding, but does not show the required backend password-to-admin escalation flow, password alignment between frontend and backend, or the frontend triggering the backend admin-grant action after password entry. Some new UX copy still implies pre-existing backend admin privileges are needed.",
   "missing_requirements": [
     {
+      "id": "REQ-1",
+      "requirement": "Backend exposes a shared method that accepts a password and, when correct, grants admin privileges to the caller principal for subsequent calls (works for authenticated and anonymous), enabling existing admin-only operations to succeed for that caller.",
+      "reason": "backend/main.mo shows an adminPassword variable and access control initialization, but the diff summary does not show any new shared method that accepts a password and adds the caller principal as an admin in accessControlState. Frontend is querying actor.isCallerAdmin(), implying backend support is needed, but no corresponding implementation is evidenced in the provided backend diff excerpt.",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/src/hooks/useAdminManagement.ts"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Align backend shared admin password used for admin privilege escalation and room deletion password validation with frontend UI admin password (frontend/src/config/adminPassword.ts), so the same password unlocks admin and allows deleteRoom(providedPassword).",
+      "reason": "backend/main.mo hardcodes adminPassword as \"DFINITY\" with no evidence it is aligned to frontend/src/config/adminPassword.ts. Additionally, the frontend file summary indicates useAdminDeleteRoom accepts providedPassword but only passes roomId to the backend, which would prevent backend-side password validation for deleteRoom(providedPassword).",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Frontend admin capability gating depends on both UI password unlock state and backend-confirmed admin status after password-based granting, and does not require Internet Identity login solely for admin access; frontend triggers backend admin-granting flow upon successful password entry.",
+      "reason": "Frontend now checks UI unlock + actor.isCallerAdmin() (backend-confirmed status), but there is no evidence the unlock flow triggers a backend password-granting method. AdminPasswordAccessPrompt only calls onUnlock(password) returning boolean, and useAdminCapability only queries isCallerAdmin without performing any password-based backend grant.",
+      "evidence": [
+        "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
+        "frontend/src/pages/AdminPage.tsx",
+        "frontend/src/hooks/useAdminManagement.ts"
+      ]
+    },
+    {
       "id": "REQ-4",
-      "requirement": "Backend exposes a room-deletion method that accepts (roomId, password) and deletes the room only when the password matches; not restricted to AccessControl.isAdmin(caller); provides clear trap messages for room-not-found and invalid-password; and performs the same cleanup (room, messages, reports).",
-      "reason": "backend/main.mo is truncated and does not show any delete-room method implementation, any password check during deletion, removal of admin-only deletion, required trap messages, or cleanup logic. Only createRoom/password storage is visible.",
+      "requirement": "Update Admin page UX copy/alerts to reflect password-based admin access (no messaging implying the user must log in with an admin Internet Identity account; explain correct next step).",
+      "reason": "Some new UI copy still indicates the user must already have backend admin privileges and suggests contacting a system administrator, which conflicts with the requested password-based self-escalation model.",
       "evidence": [
-        "backend/main.mo (truncated; shows createRoom(name, location, password) and roomPasswords map, but no deletion method)"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "requirement": "Room password is not returned by any query method that lists or fetches rooms (e.g., getRoomsByLocation/getRoom).",
-      "reason": "The diff does not include implementations of getRoomsByLocation/getRoom (or related query methods), so it cannot be verified that passwords are excluded from responses.",
-      "evidence": [
-        "backend/main.mo (truncated; Room type shown without password, but query methods are not shown)"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "requirement": "Room deletion UI is no longer gated by useAdminCapability (Internet Identity admin checks) and UI admin unlock for the purpose of deleting a room by password (while keeping other admin-only actions gated).",
-      "reason": "In-room deletion remains hidden behind admin unlock (isUnlocked) and the admin moderation room management panel is disabled when admin capability is not present, meaning users without admin capability/unlock cannot access those deletion entry points even if they know the room password.",
-      "evidence": [
-        "frontend/src/components/chat/InRoomAdminControls.tsx (returns null if !isUnlocked; still uses useAdminCapability)",
-        "frontend/src/components/admin/AdminModerationPanels.tsx (RoomManagementPanel disabled={!canPerformAdminOps}; panel action button disabled when disabled)"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "requirement": "New/refactored React Query mutation calls backend delete-room-by-password method with (roomId, password) and invalidates the same query keys as the previous admin delete room (rooms, room, messages for deleted room); all deletion call sites use it.",
-      "reason": "The provided snippet of frontend/src/hooks/useQueries.ts is truncated before any password-based delete mutation appears; the existence, backend method name, and cache invalidation behavior cannot be confirmed from the visible code.",
-      "evidence": [
-        "frontend/src/hooks/useQueries.ts (truncated; does not show useDeleteRoomWithPassword implementation)"
+        "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
+        "frontend/src/hooks/useAdminManagement.ts"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Introduced a backend migration module and wiring via `(with migration = Migration.run)` plus a new backend/migration.mo file.",
-      "reason": "The BuildRequest explicitly constrained the backend to remain a single Motoko actor in backend/main.mo and also stated no migration canister/module should be introduced unless strictly required; the diff adds backend/migration.mo and wires it in, without evidence that stable-state migration is required.",
+      "description": "Added a backend migration module (backend/migration.mo) and wired migration into the actor definition.",
+      "reason": "BuildRequest does not mention data model migration or adding migration infrastructure.",
       "evidence": [
-        "backend/migration.mo (new file)",
-        "backend/main.mo (imports Migration and includes `(with migration = Migration.run)`)"
+        "backend/migration.mo",
+        "backend/main.mo"
+      ]
+    },
+    {
+      "description": "MessageActionsMenu forces re-render via a custom window event 'admin-access-changed'.",
+      "reason": "BuildRequest does not request a global event mechanism for admin access state changes.",
+      "evidence": [
+        "frontend/src/components/chat/MessageActionsMenu.tsx"
+      ]
+    },
+    {
+      "description": "Client-side password pre-validation for room deletion (checks password === ADMIN_PASSWORD before calling backend).",
+      "reason": "REQ-2 requires backend validation alignment; client-side pre-validation is not requested and may mask backend mismatch rather than ensuring backend accepts the same password.",
+      "evidence": [
+        "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx"
       ]
     }
   ],
-  "confidence": 0.63,
+  "confidence": 0.72,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
     "frontend/src/components/admin/AdminModerationPanels.tsx",
-    "frontend/src/components/chat/InRoomAdminControls.tsx",
-    "frontend/src/components/rooms/RoomActionsMenu.tsx",
+    "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
+    "frontend/src/components/chat/MessageActionsMenu.tsx",
     "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
+    "frontend/src/hooks/useAdminManagement.ts",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/RoomsPage.tsx",
+    "frontend/src/pages/AdminPage.tsx",
     "project_state.json"
   ]
 }

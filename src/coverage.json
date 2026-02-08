@@ -1,75 +1,67 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-07T15:18:18.021Z",
+  "generatedAt": "2026-02-07T15:56:21.247Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 5,
+    "total": 4,
     "implemented": 3,
     "items": [
       {
+        "id": "REQ-1",
+        "summary": "Update backend admin authorization so that any caller who successfully provides the shared admin password is granted admin privileges (i.e., becomes an admin in the backend access control state), enabling existing admin-only operations (delete messages, delete rooms, ban/unban, check bans) to work for that caller without requiring a pre-provisioned admin Internet Identity account.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-2",
+        "summary": "Align the backend shared admin password used for admin privilege escalation and room deletion password validation with the frontend UI admin password so users can unlock admin and successfully perform password-protected room deletion using the same password.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
+          "frontend/src/hooks/useAdminManagement.ts",
+          "frontend/src/backend.d.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
+          "frontend/src/hooks/useAdminManagement.ts",
+          "frontend/src/backend.d.ts"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Update the frontend admin capability gating so that admin operations depend on (a) the UI password unlock state and (b) backend-confirmed admin status after password-based admin granting, and do not require Internet Identity login solely for admin access.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useAdminManagement.ts",
+          "frontend/src/pages/AdminPage.tsx",
+          "frontend/src/components/chat/MessageActionsMenu.tsx",
+          "frontend/src/components/admin/AdminModerationPanels.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useAdminManagement.ts",
+          "frontend/src/pages/AdminPage.tsx",
+          "frontend/src/components/chat/MessageActionsMenu.tsx",
+          "frontend/src/components/admin/AdminModerationPanels.tsx"
+        ]
+      },
+      {
         "id": "REQ-4",
-        "summary": "Change backend room-deletion authorization so that a room can be deleted by any caller who provides the correct room password, rather than requiring the caller to be an admin Internet Identity.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Persist a room password in the backend so room deletion can be validated against the password that was set for that room at creation time.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-6",
-        "summary": "Update the frontend room deletion UI flows (in-room controls, room list actions menu, and admin moderation room panel) to delete rooms using the room password prompt instead of requiring admin Internet Identity + UI admin unlock.",
+        "summary": "Update the Admin page UX copy and conditional alerts to reflect password-based admin access (remove or adjust messaging that implies the user must log in with an admin Internet Identity account to gain admin privileges).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
-          "frontend/src/components/chat/InRoomAdminControls.tsx",
-          "frontend/src/components/rooms/RoomActionsMenu.tsx",
-          "frontend/src/components/admin/AdminModerationPanels.tsx",
-          "frontend/src/pages/ChatPage.tsx"
+          "frontend/src/pages/AdminPage.tsx",
+          "frontend/src/hooks/useAdminManagement.ts",
+          "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
-          "frontend/src/components/chat/InRoomAdminControls.tsx",
-          "frontend/src/components/rooms/RoomActionsMenu.tsx",
-          "frontend/src/components/admin/AdminModerationPanels.tsx"
-        ]
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Update frontend room creation flow to collect a room password and send it to the backend when creating a room, so that the password used for deletion matches what was set at creation time.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/RoomsPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/pages/RoomsPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-8",
-        "summary": "Update frontend data hooks to support the new backend API for deleting rooms by password and to invalidate the same React Query caches currently invalidated by useAdminDeleteRoom.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/chat/InRoomAdminControls.tsx",
-          "frontend/src/components/rooms/RoomActionsMenu.tsx",
-          "frontend/src/components/admin/AdminModerationPanels.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/chat/InRoomAdminControls.tsx",
-          "frontend/src/components/rooms/RoomActionsMenu.tsx",
-          "frontend/src/components/admin/AdminModerationPanels.tsx"
+          "frontend/src/pages/AdminPage.tsx",
+          "frontend/src/hooks/useAdminManagement.ts",
+          "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx"
         ]
       }
     ]
@@ -84,13 +76,14 @@
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
     "frontend/src/components/admin/AdminModerationPanels.tsx",
-    "frontend/src/components/chat/InRoomAdminControls.tsx",
-    "frontend/src/components/rooms/RoomActionsMenu.tsx",
+    "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
+    "frontend/src/components/chat/MessageActionsMenu.tsx",
     "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useAdminManagement.ts",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/RoomsPage.tsx",
+    "frontend/src/pages/AdminPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

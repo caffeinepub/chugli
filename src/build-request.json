@@ -1,127 +1,93 @@
 {
   "kind": "build_request",
-  "title": "Allow room deletion for anyone who knows the room password (not tied to a single Internet Identity)",
+  "title": "Password-based admin privileges for any user",
   "priority": "normal",
   "requirements": [
     {
+      "id": "REQ-1",
+      "text": "Update backend admin authorization so that any caller who successfully provides the shared admin password is granted admin privileges (i.e., becomes an admin in the backend access control state), enabling existing admin-only operations (delete messages, delete rooms, ban/unban, check bans) to work for that caller without requiring a pre-provisioned admin Internet Identity account.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "allow anyone with the password to get admin privelliges"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes a shared method that accepts a password and, when correct, grants admin privileges to the caller principal for subsequent calls.",
+        "After calling the new method with the correct password, the same caller can successfully invoke existing admin-only methods (e.g., deleteMessage, banUser) without receiving an \"Unauthorized: Only admins\" trap.",
+        "Calling the new method with an incorrect password does not grant admin privileges and returns/throws a clear error (or trap) indicating invalid password.",
+        "The change works for both authenticated and anonymous callers (i.e., no requirement to be logged in with Internet Identity to become admin after providing the password)."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Align the backend shared admin password used for admin privilege escalation and room deletion password validation with the frontend UI admin password so users can unlock admin and successfully perform password-protected room deletion using the same password.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "allow anyone with the password to get admin privelliges"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The password expected by the backend for admin unlocking and for deleteRoom(providedPassword) matches the password used by the frontend UI unlock flow (frontend/src/config/adminPassword.ts).",
+        "Entering the correct password in the UI unlock flow enables admin operations and allows room deletion to succeed with the same password.",
+        "Entering an incorrect password in either flow fails with an error indicating the password is incorrect."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Update the frontend admin capability gating so that admin operations depend on (a) the UI password unlock state and (b) backend-confirmed admin status after password-based admin granting, and do not require Internet Identity login solely for admin access.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-4"
+        ],
+        "quotes": [
+          "allow anyone with the password to get admin privelliges"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The admin panel no longer blocks admin functionality with a \"Not authenticated\" requirement if the user has unlocked with the correct password and the backend confirms admin status.",
+        "The frontend triggers the backend admin-granting flow upon successful password entry (so backend admin checks can pass).",
+        "AdminModerationPanels actions are enabled when the password is correct and backend admin status is true, and remain disabled with clear messaging otherwise."
+      ]
+    },
+    {
       "id": "REQ-4",
-      "text": "Change backend room-deletion authorization so that a room can be deleted by any caller who provides the correct room password, rather than requiring the caller to be an admin Internet Identity.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "allow anyone with a password to delete a room instead of just allowing a single internet identity"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend exposes a room-deletion method that accepts (roomId, password) and deletes the room only when the password matches the stored room password for that room.",
-        "The existing admin-only deleteRoom behavior is removed or no longer used for end-user room deletion; room deletion is not restricted to AccessControl.isAdmin(caller).",
-        "If the room does not exist, backend returns a clear error (trap message) indicating the room was not found.",
-        "If the password is incorrect, backend returns a clear error (trap message) indicating the password is invalid.",
-        "Deleting a room removes the room, its messages, and its reports (same cleanup behavior as current deleteRoom)."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Persist a room password in the backend so room deletion can be validated against the password that was set for that room at creation time.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "allow anyone with a password to delete a room instead of just allowing a single internet identity"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Room creation accepts a password value and stores it with the room (or in a dedicated room-password mapping keyed by roomId).",
-        "The room password is not returned by any query method that lists or fetches rooms (e.g., getRoomsByLocation/getRoom).",
-        "Room deletion checks the stored password for the given roomId and compares it to the provided password.",
-        "No migration canister is introduced unless strictly required by stable state (current room storage is not stable)."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Update the frontend room deletion UI flows (in-room controls, room list actions menu, and admin moderation room panel) to delete rooms using the room password prompt instead of requiring admin Internet Identity + UI admin unlock.",
+      "text": "Update the Admin page UX copy and conditional alerts to reflect password-based admin access (remove or adjust messaging that implies the user must log in with an admin Internet Identity account to gain admin privileges).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "allow anyone with a password to delete a room instead of just allowing a single internet identity"
+          "allow anyone with the password to get admin privelliges"
         ]
       },
       "acceptanceCriteria": [
-        "When a user initiates a room delete action, the UI prompts for the room password (user-facing text in English, e.g., “Enter room password to delete”).",
-        "Room deletion calls the new backend room-deletion-by-password method and handles success by refreshing room lists and navigating away from deleted rooms where applicable.",
-        "If deletion fails due to incorrect password or missing room, the UI shows a clear toast/dialog error message (in English) using the existing error-to-guidance pattern where applicable.",
-        "Room deletion UI is no longer gated by useAdminCapability (Internet Identity admin checks) for the purpose of deleting a room by password.",
-        "Admin-only capabilities remain in place for truly admin-only actions (e.g., deleteMessage/ban/unban) and are not loosened by this change."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Update frontend room creation flow to collect a room password and send it to the backend when creating a room, so that the password used for deletion matches what was set at creation time.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "allow anyone with a password to delete a room instead of just allowing a single internet identity"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The room creation UI includes a password input field (English label/help text) and passes the password to the backend createRoom call.",
-        "The existing createRoom React Query mutation is updated to include the password parameter.",
-        "The room password is not displayed in room lists or room details views after creation.",
-        "Basic client-side validation exists to prevent creating a room with an empty password (or provides a clear English error)."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Update frontend data hooks to support the new backend API for deleting rooms by password and to invalidate the same React Query caches currently invalidated by useAdminDeleteRoom.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "allow anyone with a password to delete a room instead of just allowing a single internet identity"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A new React Query mutation exists (or the existing one is refactored) to call the backend delete-room-by-password method with (roomId, password).",
-        "On successful deletion, the same query keys are invalidated as before (rooms, room, messages for the deleted room) to keep UI consistent.",
-        "All UI call sites that delete rooms (InRoomAdminControls, RoomActionsMenu, AdminModerationPanels room deletion) use the password-based deletion mutation."
+        "AdminPage does not instruct users that they must log in with an \"admin Internet Identity account\" to perform admin operations.",
+        "If admin operations are unavailable, the UI explains the actual next step (e.g., enter password, or password accepted but backend admin not yet granted/verified).",
+        "All user-facing text is in English."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo.",
-    "Do not edit files under frontend/src/components/ui or other paths listed in frontend.immutablePaths.",
-    "Use English for any user-facing text."
+    "Backend must remain a single-actor Motoko canister (all logic in backend/main.mo).",
+    "Do not modify files listed as immutable in SYSTEM_CONTEXT (compose UI components instead of editing them)."
   ],
   "nonGoals": [
-    "Do not change authorization rules for admin-only actions other than room deletion (e.g., message deletion, banning/unbanning remain admin-only).",
-    "Do not add third-party authentication or external databases.",
-    "Do not implement real-time/WebSocket updates; continue using existing polling/react-query invalidation patterns."
+    "Implementing per-user admin roles or multiple admin tiers.",
+    "Integrating third-party authentication providers beyond Internet Identity.",
+    "Adding external database or off-canister storage."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

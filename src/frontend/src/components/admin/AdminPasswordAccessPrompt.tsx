@@ -37,7 +37,7 @@ export default function AdminPasswordAccessPrompt({ onUnlock, error }: AdminPass
             Admin Access
           </CardTitle>
           <CardDescription>
-            Enter the admin password to access admin controls
+            Enter the password to unlock admin controls. Your principal must also have backend admin privileges.
           </CardDescription>
         </CardHeader>
         <CardContent>

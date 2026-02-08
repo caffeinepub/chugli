@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { useInternetIdentity } from './useInternetIdentity';
 import { useAdminAccess } from './useAdminAccess';
 
 export interface AdminCapability {
@@ -15,9 +14,9 @@ export interface AdminCapability {
  */
 export function useAdminCapability(): AdminCapability {
   const { isUnlocked } = useAdminAccess();
-  const { identity } = useInternetIdentity();
   const { actor, isFetching: actorFetching } = useActor();
 
+  // Check backend admin status (works for both authenticated and anonymous)
   const { data: isBackendAdmin, isLoading: adminCheckLoading } = useQuery<boolean>({
     queryKey: ['isCallerAdmin'],
     queryFn: async () => {
@@ -29,18 +28,9 @@ export function useAdminCapability(): AdminCapability {
         return false;
       }
     },
-    enabled: !!actor && !actorFetching && !!identity,
+    enabled: !!actor && !actorFetching,
     retry: false,
   });
-
-  // Not logged in
-  if (!identity) {
-    return {
-      canPerformAdminOps: false,
-      reason: 'Not authenticated',
-      nextStep: 'Please log in with your admin Internet Identity account',
-    };
-  }
 
   // UI not unlocked
   if (!isUnlocked) {
@@ -55,7 +45,7 @@ export function useAdminCapability(): AdminCapability {
   if (adminCheckLoading || actorFetching) {
     return {
       canPerformAdminOps: false,
-      reason: 'Checking admin status...',
+      reason: 'Verifying admin status...',
     };
   }
 
@@ -64,7 +54,7 @@ export function useAdminCapability(): AdminCapability {
     return {
       canPerformAdminOps: false,
       reason: 'Not authorized as admin',
-      nextStep: 'You must be logged in with an admin Internet Identity account. The current account does not have admin privileges.',
+      nextStep: 'The password unlocks the UI, but your principal does not have backend admin privileges. Contact the system administrator.',
     };
   }
 

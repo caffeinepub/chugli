@@ -30,7 +30,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Message } from '../../backend';
 import { useModeration } from '../../hooks/useModeration';
-import { useAdminAccess } from '../../hooks/useAdminAccess';
+import { useAdminCapability } from '../../hooks/useAdminManagement';
 import {
   useMuteUser,
   useBlockUser,
@@ -50,7 +50,7 @@ export default function MessageActionsMenu({ message, roomId }: MessageActionsMe
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { muteUser, blockUser } = useModeration();
-  const { isUnlocked: isAdminUnlocked } = useAdminAccess();
+  const { canPerformAdminOps } = useAdminCapability();
   const muteUserMutation = useMuteUser();
   const blockUserMutation = useBlockUser();
   const reportMutation = useReportContent();
@@ -145,7 +145,7 @@ export default function MessageActionsMenu({ message, roomId }: MessageActionsMe
             Report
           </DropdownMenuItem>
           
-          {isAdminUnlocked && (
+          {canPerformAdminOps && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem 

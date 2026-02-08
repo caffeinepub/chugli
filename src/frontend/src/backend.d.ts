@@ -39,11 +39,11 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     banUser(user: Principal): Promise<boolean>;
     blockUser(targetUser: string): Promise<void>;
-    createRoom(name: string, location: string | null, password: string): Promise<Room>;
+    createRoom(name: string, location: string | null): Promise<Room>;
     deleteAllMessagesInRoom(roomId: string): Promise<boolean>;
     deleteCallerUserProfile(): Promise<void>;
     deleteMessage(roomId: string, messageId: string): Promise<boolean>;
-    deleteRoomWithPassword(roomId: string, password: string): Promise<boolean>;
+    deleteRoom(roomId: string): Promise<boolean>;
     getBlocks(user: Principal): Promise<Array<string> | null>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -52,11 +52,13 @@ export interface backendInterface {
     getRoom(id: string): Promise<Room | null>;
     getRoomsByLocation(location: string | null): Promise<Array<Room>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    grantAdminWithPassword(password: string): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     isUserBanned(user: Principal): Promise<boolean>;
     muteUser(targetUser: string): Promise<void>;
     reportContent(reportedUser: string | null, reportedMessage: string | null, room: string, reason: string): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     sendMessage(roomId: string, sender: string, content: string): Promise<Message>;
+    setAdminPassword(newPassword: string): Promise<void>;
     unbanUser(user: Principal): Promise<boolean>;
 }

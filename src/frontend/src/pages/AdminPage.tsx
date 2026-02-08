@@ -17,6 +17,7 @@ export default function AdminPage() {
     toast.success('Admin access locked');
   };
 
+  // Show password prompt when locked
   if (!isUnlocked) {
     return (
       <div className="container max-w-md mx-auto py-8 px-4">
@@ -38,6 +39,7 @@ export default function AdminPage() {
     );
   }
 
+  // Password is correct, show admin panel
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
       <div className="space-y-6">
@@ -57,16 +59,18 @@ export default function AdminPage() {
           </Button>
         </div>
 
+        {/* Show status alert if admin operations are not yet available */}
         {!canPerformAdminOps && (
-          <Alert variant="destructive">
+          <Alert>
             <Shield className="h-4 w-4" />
             <AlertDescription>
               <div className="font-medium">{reason}</div>
-              {nextStep && <div className="mt-2 text-sm">{nextStep}</div>}
+              {nextStep && <div className="mt-2 text-sm text-muted-foreground">{nextStep}</div>}
             </AlertDescription>
           </Alert>
         )}
 
+        {/* Show moderation panels (they will be disabled if canPerformAdminOps is false) */}
         <AdminModerationPanels />
       </div>
     </div>

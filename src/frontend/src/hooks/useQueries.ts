@@ -72,9 +72,9 @@ export function useCreateRoom() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ name, location, password }: { name: string; location: string | null; password: string }) => {
+    mutationFn: async ({ name, location }: { name: string; location: string | null }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createRoom(name, location, password);
+      return actor.createRoom(name, location);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['rooms', variables.location] });
@@ -147,15 +147,17 @@ export function useReportContent() {
   });
 }
 
-// Password-based room deletion (available to anyone with the password)
-export function useDeleteRoomWithPassword() {
+// Admin moderation hooks
+
+export function useAdminDeleteRoom() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ roomId, password }: { roomId: string; password: string }) => {
+    mutationFn: async ({ roomId }: { roomId: string; providedPassword: string }) => {
       if (!actor) throw new Error('Actor not available');
-      const result = await actor.deleteRoomWithPassword(roomId, password);
+      // Backend deleteRoom only takes roomId, password validation happens in UI
+      const result = await actor.deleteRoom(roomId);
       if (!result) {
         throw new Error('Failed to delete room - operation returned false');
       }
@@ -169,8 +171,6 @@ export function useDeleteRoomWithPassword() {
     },
   });
 }
-
-// Admin moderation hooks
 
 export function useAdminDeleteMessage() {
   const { actor } = useActor();

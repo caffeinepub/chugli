@@ -1,96 +1,88 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Password-based room creation and deletion flows (frontend)",
+  "title": "Password-based admin unlock without Internet Identity requirement (frontend)",
   "requirements": [
     {
-      "id": "REQ-6",
-      "summary": "Update all room deletion UI entry points to prompt for the room password and delete via password-based backend method (not admin unlock/Internet Identity).",
+      "id": "REQ-2",
+      "summary": "Use the same shared admin password constant for UI unlock, backend admin unlock call, and room deletion password validation UX.",
       "acceptanceCriteria": [
-        "When a user initiates a room delete action, the UI prompts for the room password (user-facing text in English, e.g., “Enter room password to delete”).",
-        "Room deletion calls the new backend room-deletion-by-password method and handles success by refreshing room lists and navigating away from deleted rooms where applicable.",
-        "If deletion fails due to incorrect password or missing room, the UI shows a clear toast/dialog error message (in English) using the existing error-to-guidance pattern where applicable.",
-        "Room deletion UI is no longer gated by useAdminCapability (Internet Identity admin checks) for the purpose of deleting a room by password.",
-        "Admin-only capabilities remain in place for truly admin-only actions (e.g., deleteMessage/ban/unban) and are not loosened by this change."
+        "The password expected by the backend for admin unlocking and for deleteRoom(providedPassword) matches the password used by the frontend UI unlock flow (frontend/src/config/adminPassword.ts).",
+        "Entering the correct password in the UI unlock flow enables admin operations and allows room deletion to succeed with the same password.",
+        "Entering an incorrect password in either flow fails with an error indicating the password is incorrect."
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
-          "operation": "create",
-          "description": "Create a reusable room-deletion dialog that prompts for a room password (English copy like “Enter room password to delete”) and calls the password-based deletion mutation; use existing shadcn/ui Dialog/AlertDialog + Input components. Verify the component's usage instructions before implementing."
+          "operation": "modify",
+          "description": "Align room deletion UX with the shared UI admin password by validating the entered password against ADMIN_PASSWORD (from frontend/src/config/adminPassword.ts) before attempting deletion, and adjust helper/error text to clearly indicate the same password is used for admin unlock and room deletion. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/chat/InRoomAdminControls.tsx",
+          "path": "frontend/src/hooks/useAdminManagement.ts",
           "operation": "modify",
-          "description": "Replace the current admin-unlock-gated room deletion flow with the new password-prompt deletion flow (using RoomDeleteWithPasswordDialog). Ensure successful deletion triggers onRoomDeleted() and navigates away via parent callback; remove useAdminCapability/useAdminAccess gating for room deletion only. Verify the component's usage instructions before implementing."
+          "description": "Use ADMIN_PASSWORD (frontend/src/config/adminPassword.ts) as the single password source when invoking the backend admin-granting capability after the UI is unlocked, and ensure mismatch scenarios surface a clear 'password incorrect/mismatch' guidance to the user. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/rooms/RoomActionsMenu.tsx",
+          "path": "frontend/src/backend.d.ts",
           "operation": "modify",
-          "description": "Make room deletion available without admin capability gating by using the password-prompt deletion dialog/mutation; keep menu visible to non-admin users and handle success/failure with toasts in English. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/admin/AdminModerationPanels.tsx",
-          "operation": "modify",
-          "description": "Update the RoomManagementPanel room deletion action to use the password-prompt deletion flow (dialog + mutation) rather than useAdminCapability-gated deleteRoom; do not change other admin-only panels/actions (delete message, ban/unban) which must remain admin-gated. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/ChatPage.tsx",
-          "operation": "modify",
-          "description": "Ensure the in-room deletion success path remains correct: after successful deletion, navigate away from the deleted room (existing onRoomDeleted handler) and avoid leaving the user on an invalid room view. Verify the component's usage instructions before implementing."
+          "description": "Update the frontend backend interface typing to include the new backend admin-granting shared method that accepts the password and grants admin privileges for the caller (as required by REQ-1/REQ-2), so the frontend can call it from the unlock flow."
         }
       ]
     },
     {
-      "id": "REQ-7",
-      "summary": "Collect and validate a room password in the room creation UI and include it in the createRoom call.",
+      "id": "REQ-3",
+      "summary": "Gate admin operations by both UI password unlock state and backend-confirmed admin status, without requiring Internet Identity login solely for admin access.",
       "acceptanceCriteria": [
-        "The room creation UI includes a password input field (English label/help text) and passes the password to the backend createRoom call.",
-        "The existing createRoom React Query mutation is updated to include the password parameter.",
-        "The room password is not displayed in room lists or room details views after creation.",
-        "Basic client-side validation exists to prevent creating a room with an empty password (or provides a clear English error)."
+        "The admin panel no longer blocks admin functionality with a \"Not authenticated\" requirement if the user has unlocked with the correct password and the backend confirms admin status.",
+        "The frontend triggers the backend admin-granting flow upon successful password entry (so backend admin checks can pass).",
+        "AdminModerationPanels actions are enabled when the password is correct and backend admin status is true, and remain disabled with clear messaging otherwise."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/hooks/useAdminManagement.ts",
           "operation": "modify",
-          "description": "Update the existing useCreateRoom mutation to accept a password parameter and call the backend createRoom with (name, location, password); keep existing rooms cache invalidation behavior unchanged. Verify the component's usage instructions before implementing."
+          "description": "Refactor useAdminCapability to: (1) run backend admin checks for both authenticated and anonymous actors (remove the identity-only gating), (2) trigger the backend admin-granting method after successful UI unlock, and (3) provide clear reason/nextStep states for locked, granting-in-progress, grant-failed, and backend-not-admin outcomes. Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/pages/RoomsPage.tsx",
+          "path": "frontend/src/pages/AdminPage.tsx",
           "operation": "modify",
-          "description": "Extend the Create Room dialog to include a password input (English Label/help text), add basic client-side validation for empty password (toast/error in English), and pass password through the updated useCreateRoom mutation; ensure the password is never displayed after creation. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "summary": "Add/update React Query mutations to delete rooms by password and invalidate the same caches as the previous admin delete room hook; migrate all call sites.",
-      "acceptanceCriteria": [
-        "A new React Query mutation exists (or the existing one is refactored) to call the backend delete-room-by-password method with (roomId, password).",
-        "On successful deletion, the same query keys are invalidated as before (rooms, room, messages for the deleted room) to keep UI consistent.",
-        "All UI call sites that delete rooms (InRoomAdminControls, RoomActionsMenu, AdminModerationPanels room deletion) use the password-based deletion mutation."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Add a new password-based room deletion mutation (e.g., useDeleteRoomWithPassword) that calls the backend deleteRoomWithPassword(roomId, password), throws on false, and invalidates the same query keys as the old useAdminDeleteRoom (rooms, room, messages). Keep useAdminDeleteMessage/ban/unban unchanged. Verify the component's usage instructions before implementing."
+          "description": "Remove admin blocking based solely on Internet Identity authentication; rely on useAdminCapability for the effective admin status and display moderation UI availability accordingly (including showing a 'granting/verifying admin status' state after unlock). Verify the component's usage instructions before implementing."
         },
         {
-          "path": "frontend/src/components/chat/InRoomAdminControls.tsx",
+          "path": "frontend/src/components/chat/MessageActionsMenu.tsx",
           "operation": "modify",
-          "description": "Switch room deletion to use the new password-based deletion mutation and remove reliance on useAdminDeleteRoom for room deletion. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/rooms/RoomActionsMenu.tsx",
-          "operation": "modify",
-          "description": "Switch room deletion to use the new password-based deletion mutation and ensure the UI prompts for password and properly handles mutation pending state and errors. Verify the component's usage instructions before implementing."
+          "description": "Update the admin-only 'Delete Message (Admin)' visibility gating to require backend-confirmed admin capability (use useAdminCapability.canPerformAdminOps), not only the UI unlock flag, so delete attempts don't immediately fail with unauthorized traps. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/components/admin/AdminModerationPanels.tsx",
           "operation": "modify",
-          "description": "Switch RoomManagementPanel room deletion to use the new password-based deletion mutation and ensure it invalidates/refreshes room lists as before; keep admin gating for other admin-only actions. Verify the component's usage instructions before implementing."
+          "description": "Ensure panels and their disabled states/messages reflect the combined gating (UI unlock + backend-confirmed admin) and clearly communicate why actions are disabled when admin is not yet granted/verified. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Update Admin page UX copy and alerts to reflect password-based admin access rather than requiring an admin Internet Identity account.",
+      "acceptanceCriteria": [
+        "AdminPage does not instruct users that they must log in with an \"admin Internet Identity account\" to perform admin operations.",
+        "If admin operations are unavailable, the UI explains the actual next step (e.g., enter password, or password accepted but backend admin not yet granted/verified).",
+        "All user-facing text is in English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminPage.tsx",
+          "operation": "modify",
+          "description": "Update all admin-related UX copy to remove references to needing an 'admin Internet Identity account' and replace with password-based instructions and next steps (enter password; wait for backend verification; retry if backend rejects). Ensure alerts reflect the real state from useAdminCapability. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useAdminManagement.ts",
+          "operation": "modify",
+          "description": "Adjust returned reason/nextStep strings to be accurate for password-based admin access (English only), including cases where the UI is unlocked but backend admin has not yet been granted/confirmed. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
+          "operation": "modify",
+          "description": "Update prompt copy to match the new flow (password unlock triggers backend admin granting/verification) and ensure error text remains clear and English-only. Verify the component's usage instructions before implementing."
         }
       ]
     }

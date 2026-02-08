@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
+import { ADMIN_PASSWORD } from '../config/adminPassword';
 
-const ADMIN_PASSWORD = 'ilovemk2116'; // Simple password for demo purposes
 const STORAGE_KEY = 'chugli_admin_unlocked';
 
 export function useAdminAccess() {

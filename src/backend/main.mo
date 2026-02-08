@@ -1,21 +1,17 @@
 import List "mo:core/List";
 import Map "mo:core/Map";
 import Time "mo:core/Time";
-import Array "mo:core/Array";
 import Iter "mo:core/Iter";
 import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 import Migration "migration";
 
 (with migration = Migration.run)
 actor {
-  let accessControlState = AccessControl.initState();
-  include MixinAuthorization(accessControlState);
-
+  var adminPassword : Text = "DFINITY";
   var messageCounter = 0;
   var roomCounter = 0;
   var reportCounter = 0;
@@ -23,14 +19,14 @@ actor {
   let MESSAGE_RETENTION_LIMIT = 100;
 
   let rooms = Map.empty<Text, Room>();
-  let roomPasswords = Map.empty<Text, Text>();
   let messages = Map.empty<Text, List.List<Message>>();
   let mutes = Map.empty<Principal, List.List<Text>>();
   let blocks = Map.empty<Principal, List.List<Text>>();
   let reports = Map.empty<Text, List.List<Report>>();
   let userProfiles = Map.empty<Principal, UserProfile>();
-
   let bannedUsers = Map.empty<Principal, Bool>();
+  let accessControlState = AccessControl.initState();
+  include MixinAuthorization(accessControlState);
 
   type Room = {
     id : Text;
@@ -67,7 +63,7 @@ actor {
     lastUpdated : Time.Time;
   };
 
-  public shared ({ caller }) func createRoom(name : Text, location : ?Text, password : Text) : async Room {
+  public shared ({ caller }) func createRoom(name : Text, location : ?Text) : async Room {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create rooms");
     };
@@ -81,7 +77,6 @@ actor {
       createdTimestamp = Time.now();
     };
     rooms.add(id, room);
-    roomPasswords.add(id, password);
     messages.add(id, List.empty<Message>());
     roomCounter += 1;
     room;
@@ -328,23 +323,15 @@ actor {
     true;
   };
 
-  public shared ({ caller }) func deleteRoomWithPassword(roomId : Text, password : Text) : async Bool {
-    switch (roomPasswords.get(roomId)) {
-      case (?storedPassword) {
-        if (storedPassword != password) {
-          Runtime.trap("Unauthorized: Incorrect room password provided");
-        };
-
-        rooms.remove(roomId);
-        messages.remove(roomId);
-        reports.remove(roomId);
-        roomPasswords.remove(roomId);
-        true;
-      };
-      case (null) {
-        Runtime.trap("Room not found");
-      };
+  public shared ({ caller }) func deleteRoom(roomId : Text) : async Bool {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can delete rooms");
     };
+
+    rooms.remove(roomId);
+    messages.remove(roomId);
+    reports.remove(roomId);
+    true;
   };
 
   public shared ({ caller }) func banUser(user : Principal) : async Bool {
@@ -370,6 +357,13 @@ actor {
       Runtime.trap("Unauthorized: Only admins can check ban status");
     };
     isUserBannedImpl(user);
+  };
+
+  public shared ({ caller }) func setAdminPassword(newPassword : Text) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can set the admin password");
+    };
+    adminPassword := newPassword;
   };
 
   func removeMessageFromRoom(roomId : Text, messageId : Text) {

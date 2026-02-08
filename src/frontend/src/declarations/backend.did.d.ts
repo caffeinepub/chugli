@@ -41,11 +41,11 @@ export interface _SERVICE {
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'banUser' : ActorMethod<[Principal], boolean>,
   'blockUser' : ActorMethod<[string], undefined>,
-  'createRoom' : ActorMethod<[string, [] | [string], string], Room>,
+  'createRoom' : ActorMethod<[string, [] | [string]], Room>,
   'deleteAllMessagesInRoom' : ActorMethod<[string], boolean>,
   'deleteCallerUserProfile' : ActorMethod<[], undefined>,
   'deleteMessage' : ActorMethod<[string, string], boolean>,
-  'deleteRoomWithPassword' : ActorMethod<[string, string], boolean>,
+  'deleteRoom' : ActorMethod<[string], boolean>,
   'getBlocks' : ActorMethod<[Principal], [] | [Array<string>]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
@@ -63,6 +63,7 @@ export interface _SERVICE {
   >,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'sendMessage' : ActorMethod<[string, string, string], Message>,
+  'setAdminPassword' : ActorMethod<[string], undefined>,
   'unbanUser' : ActorMethod<[Principal], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;

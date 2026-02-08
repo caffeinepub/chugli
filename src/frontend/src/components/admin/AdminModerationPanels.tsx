@@ -24,7 +24,7 @@ export default function AdminModerationPanels() {
   return (
     <div className="space-y-6">
       {!canPerformAdminOps && (
-        <Alert variant="destructive">
+        <Alert variant="default">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             <p className="font-medium">{reason}</p>
@@ -45,27 +45,18 @@ export default function AdminModerationPanels() {
 function RoomManagementPanel({ disabled }: { disabled: boolean }) {
   const { data: rooms } = useGetRoomsByLocation(null);
   const [selectedRoomId, setSelectedRoomId] = useState('');
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const selectedRoom = rooms?.find((r) => r.id === selectedRoomId);
 
-  const handleDeleteClick = () => {
-    if (!selectedRoomId) {
-      toast.error('Please enter a room ID');
-      return;
-    }
-    if (!selectedRoom) {
-      toast.error('Room not found');
-      return;
-    }
-    setIsDeleteDialogOpen(true);
+  const handleDeleteSuccess = () => {
+    setSelectedRoomId('');
   };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Room Management</CardTitle>
-        <CardDescription>Delete rooms by entering the room password</CardDescription>
+        <CardDescription>Delete any room using the admin password</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -77,27 +68,27 @@ function RoomManagementPanel({ disabled }: { disabled: boolean }) {
             onChange={(e) => setSelectedRoomId(e.target.value)}
             disabled={disabled}
           />
+          {selectedRoom && (
+            <p className="text-sm text-muted-foreground">
+              Selected: <span className="font-medium">{selectedRoom.name}</span>
+            </p>
+          )}
         </div>
-        <Button
-          variant="destructive"
-          onClick={handleDeleteClick}
-          disabled={disabled || !selectedRoomId}
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Delete Room
-        </Button>
-
         {selectedRoom && (
           <RoomDeleteWithPasswordDialog
             roomId={selectedRoom.id}
             roomName={selectedRoom.name}
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
-            onSuccess={() => {
-              setSelectedRoomId('');
-              toast.success('Room deleted successfully');
-            }}
+            onSuccess={handleDeleteSuccess}
+            trigger={
+              <Button variant="destructive" disabled={disabled}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Room
+              </Button>
+            }
           />
+        )}
+        {!selectedRoom && selectedRoomId && (
+          <p className="text-sm text-destructive">Room not found</p>
         )}
       </CardContent>
     </Card>
@@ -131,7 +122,7 @@ function MessageModerationPanel({ disabled }: { disabled: boolean }) {
     <Card>
       <CardHeader>
         <CardTitle>Message Moderation</CardTitle>
-        <CardDescription>Delete inappropriate messages (admin only)</CardDescription>
+        <CardDescription>Delete inappropriate messages</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
@@ -223,7 +214,7 @@ function UserBanPanel({ disabled }: { disabled: boolean }) {
     <Card>
       <CardHeader>
         <CardTitle>User Ban Management</CardTitle>
-        <CardDescription>Ban or unban users by their Principal ID (admin only)</CardDescription>
+        <CardDescription>Ban or unban users by their Principal ID</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

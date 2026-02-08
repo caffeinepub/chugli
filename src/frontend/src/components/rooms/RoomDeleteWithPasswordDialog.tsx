@@ -9,87 +9,101 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useDeleteRoomWithPassword } from '../../hooks/useQueries';
-import { toast } from 'sonner';
+import { useAdminDeleteRoom } from '../../hooks/useQueries';
 import { getErrorWithGuidance } from '../../utils/auth/isAuthError';
+import { ADMIN_PASSWORD } from '../../config/adminPassword';
+import { toast } from 'sonner';
 
 interface RoomDeleteWithPasswordDialogProps {
   roomId: string;
   roomName: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  trigger?: React.ReactNode;
   onSuccess?: () => void;
 }
 
 export default function RoomDeleteWithPasswordDialog({
   roomId,
   roomName,
-  open,
-  onOpenChange,
+  trigger,
   onSuccess,
 }: RoomDeleteWithPasswordDialogProps) {
+  const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
-  const deleteRoom = useDeleteRoomWithPassword();
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const deleteRoom = useAdminDeleteRoom();
 
   const handleDelete = async () => {
-    if (!password.trim()) {
-      toast.error('Please enter the room password');
+    // Validate password against the shared admin password
+    if (password !== ADMIN_PASSWORD) {
+      setValidationError('Incorrect password. Please enter the correct admin password.');
       return;
     }
 
+    setValidationError(null);
+
     try {
-      await deleteRoom.mutateAsync({ roomId, password: password.trim() });
-      toast.success('Room deleted successfully');
+      await deleteRoom.mutateAsync({ roomId, providedPassword: password });
+      toast.success(`Room "${roomName}" deleted successfully`);
+      setOpen(false);
       setPassword('');
-      onOpenChange(false);
       onSuccess?.();
     } catch (error) {
       const errorMsg = getErrorWithGuidance(error);
       toast.error(errorMsg);
-      console.error('Room deletion error:', error);
+      console.error('Delete room error:', error);
     }
   };
 
-  const handleCancel = () => {
-    setPassword('');
-    onOpenChange(false);
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setPassword('');
+      setValidationError(null);
+    }
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Room</AlertDialogTitle>
+          <AlertDialogTitle>Delete Room?</AlertDialogTitle>
           <AlertDialogDescription>
-            Enter the room password to delete "{roomName}". This action cannot be undone and will remove all messages in this room.
+            This will permanently delete the room <strong>"{roomName}"</strong> and all its messages.
+            This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="space-y-2 py-4">
-          <Label htmlFor="room-password">Room Password</Label>
-          <Input
-            id="room-password"
-            type="password"
-            placeholder="Enter room password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && password.trim()) {
-                handleDelete();
-              }
-            }}
-            disabled={deleteRoom.isPending}
-          />
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="delete-password">Admin Password</Label>
+            <Input
+              id="delete-password"
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setValidationError(null);
+              }}
+              placeholder="Enter admin password"
+              disabled={deleteRoom.isPending}
+            />
+            {validationError && (
+              <p className="text-sm text-destructive">{validationError}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Enter the same password used to unlock admin controls.
+            </p>
+          </div>
         </div>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleCancel} disabled={deleteRoom.isPending}>
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteRoom.isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            disabled={deleteRoom.isPending || !password.trim()}
+            disabled={deleteRoom.isPending || !password}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {deleteRoom.isPending ? (

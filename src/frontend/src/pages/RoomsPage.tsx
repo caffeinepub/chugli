@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { Plus, Users, MapPin, Loader2, AlertCircle, Search, X, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -13,7 +13,6 @@ import { useAuthControls } from '../hooks/useAuthControls';
 import { setPostLoginRedirect } from '../utils/auth/postLoginRedirect';
 import { isAuthError, extractErrorMessage } from '../utils/auth/isAuthError';
 import { ALL_AREAS_ID } from '../storage/areaSelectionStorage';
-import RoomActionsMenu from '../components/rooms/RoomActionsMenu';
 import { toast } from 'sonner';
 
 export default function RoomsPage() {
@@ -28,7 +27,6 @@ export default function RoomsPage() {
   const createRoom = useCreateRoom();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [roomName, setRoomName] = useState('');
-  const [roomPassword, setRoomPassword] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [draftSearchQuery, setDraftSearchQuery] = useState('');
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
@@ -78,11 +76,6 @@ export default function RoomsPage() {
       return;
     }
 
-    if (!roomPassword.trim()) {
-      toast.error('Please enter a room password');
-      return;
-    }
-
     if (!selection.areaId) {
       toast.error('Please select an area first');
       navigate({ to: '/settings' });
@@ -100,12 +93,10 @@ export default function RoomsPage() {
       await createRoom.mutateAsync({
         name: roomName.trim(),
         location: selection.areaId,
-        password: roomPassword.trim(),
       });
       toast.success('Room created!');
       setIsDialogOpen(false);
       setRoomName('');
-      setRoomPassword('');
     } catch (error) {
       // Check if this is an authentication/authorization error
       if (isAuthError(error)) {
@@ -217,10 +208,7 @@ export default function RoomsPage() {
                 <CardHeader>
                   <CardTitle className="flex items-start justify-between">
                     <span className="flex-1">{room.name}</span>
-                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                      <Users className="h-5 w-5 text-muted-foreground" />
-                      <RoomActionsMenu room={room} />
-                    </div>
+                    <Users className="h-5 w-5 text-muted-foreground flex-shrink-0 ml-2" />
                   </CardTitle>
                   {room.location && (
                     <CardDescription className="flex items-center gap-1">
@@ -254,25 +242,12 @@ export default function RoomsPage() {
                   maxLength={50}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="room-password">Room Password</Label>
-                <Input
-                  id="room-password"
-                  type="password"
-                  placeholder="Enter a password to protect this room"
-                  value={roomPassword}
-                  onChange={(e) => setRoomPassword(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Anyone with this password can delete the room. Keep it safe!
-                </p>
-              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleCreateRoom} disabled={createRoom.isPending || !roomName.trim() || !roomPassword.trim()}>
+              <Button onClick={handleCreateRoom} disabled={createRoom.isPending || !roomName.trim()}>
                 {createRoom.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -306,16 +281,10 @@ export default function RoomsPage() {
                 }}
               />
             </div>
-            <DialogFooter className="flex gap-2">
+            <DialogFooter>
               <Button variant="outline" onClick={handleClear}>
                 <X className="h-4 w-4 mr-2" />
                 Clear
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleCloseSearch}
-              >
-                Close
               </Button>
               <Button
                 onClick={() => {

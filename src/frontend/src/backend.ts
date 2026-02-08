@@ -122,11 +122,11 @@ export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     banUser(user: Principal): Promise<boolean>;
     blockUser(targetUser: string): Promise<void>;
-    createRoom(name: string, location: string | null, password: string): Promise<Room>;
+    createRoom(name: string, location: string | null): Promise<Room>;
     deleteAllMessagesInRoom(roomId: string): Promise<boolean>;
     deleteCallerUserProfile(): Promise<void>;
     deleteMessage(roomId: string, messageId: string): Promise<boolean>;
-    deleteRoomWithPassword(roomId: string, password: string): Promise<boolean>;
+    deleteRoom(roomId: string): Promise<boolean>;
     getBlocks(user: Principal): Promise<Array<string> | null>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
@@ -141,6 +141,7 @@ export interface backendInterface {
     reportContent(reportedUser: string | null, reportedMessage: string | null, room: string, reason: string): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     sendMessage(roomId: string, sender: string, content: string): Promise<Message>;
+    setAdminPassword(newPassword: string): Promise<void>;
     unbanUser(user: Principal): Promise<boolean>;
 }
 import type { Message as _Message, Room as _Room, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
@@ -202,17 +203,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async createRoom(arg0: string, arg1: string | null, arg2: string): Promise<Room> {
+    async createRoom(arg0: string, arg1: string | null): Promise<Room> {
         if (this.processError) {
             try {
-                const result = await this.actor.createRoom(arg0, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg1), arg2);
+                const result = await this.actor.createRoom(arg0, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg1));
                 return from_candid_Room_n4(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createRoom(arg0, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg1), arg2);
+            const result = await this.actor.createRoom(arg0, to_candid_opt_n3(this._uploadFile, this._downloadFile, arg1));
             return from_candid_Room_n4(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -258,17 +259,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async deleteRoomWithPassword(arg0: string, arg1: string): Promise<boolean> {
+    async deleteRoom(arg0: string): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.deleteRoomWithPassword(arg0, arg1);
+                const result = await this.actor.deleteRoom(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.deleteRoomWithPassword(arg0, arg1);
+            const result = await this.actor.deleteRoom(arg0);
             return result;
         }
     }
@@ -466,6 +467,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.sendMessage(arg0, arg1, arg2);
             return from_candid_Message_n13(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async setAdminPassword(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setAdminPassword(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setAdminPassword(arg0);
+            return result;
         }
     }
     async unbanUser(arg0: Principal): Promise<boolean> {

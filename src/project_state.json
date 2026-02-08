@@ -1,34 +1,34 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Room deletion authorization should be based on possession of the room password (anyone with the password can delete), rather than being restricted to a single internet identity.",
+  "summary": "App includes an admin mode gated by a shared password; anyone who knows the password should receive admin privileges.",
   "architectural_notes": [
-    "Room deletion authorization should be password-based (shared secret) rather than bound to a specific internet identity."
+    "Admin access is granted via a shared password (password-based admin mode)."
   ],
   "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-frontend-room-deletion-ui-flows-in-room-controls-room-list-actions-menu-and-admin-moderation-room-panel-to-delete-rooms-using-the-room-password-prompt-instead-of-requiring-admin-internet-identity-ui-admin-unlock",
-      "title": "Update the frontend room deletion UI flows (in-room controls, room list actions menu, and admin moderation room panel) to delete rooms using the room password prompt instead of requiring admin Internet Identity + UI admin unlock.",
+      "id": "feature-align-the-backend-shared-admin-password-used-for-admin-privilege-escalation-and-room-deletion-password-validation-with-the-frontend-ui-admin-password-so-users-can-unlock-admin-and-successfully-perform-password-protected-room-deletion-using-the-same-password",
+      "title": "Align the backend shared admin password used for admin privilege escalation and room deletion password validation with the frontend UI admin password so users can unlock admin and successfully perform password-protected room deletion using the same password.",
       "reqIds": [
-        "REQ-6"
+        "REQ-2"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-frontend-room-creation-flow-to-collect-a-room-password-and-send-it-to-the-backend-when-creating-a-room-so-that-the-password-used-for-deletion-matches-what-was-set-at-creation-time",
-      "title": "Update frontend room creation flow to collect a room password and send it to the backend when creating a room, so that the password used for deletion matches what was set at creation time.",
+      "id": "feature-update-the-frontend-admin-capability-gating-so-that-admin-operations-depend-on-a-the-ui-password-unlock-state-and-b-backend-confirmed-admin-status-after-password-based-admin-granting-and-do-not-require-internet-identity-login-solely-for-admin-access",
+      "title": "Update the frontend admin capability gating so that admin operations depend on (a) the UI password unlock state and (b) backend-confirmed admin status after password-based admin granting, and do not require Internet Identity login solely for admin access.",
       "reqIds": [
-        "REQ-7"
+        "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-frontend-data-hooks-to-support-the-new-backend-api-for-deleting-rooms-by-password-and-to-invalidate-the-same-react-query-caches-currently-invalidated-by-useadmindeleteroom",
-      "title": "Update frontend data hooks to support the new backend API for deleting rooms by password and to invalidate the same React Query caches currently invalidated by useAdminDeleteRoom.",
+      "id": "feature-update-the-admin-page-ux-copy-and-conditional-alerts-to-reflect-password-based-admin-access-remove-or-adjust-messaging-that-implies-the-user-must-log-in-with-an-admin-internet-identity-account-to-gain-admin-privileges",
+      "title": "Update the Admin page UX copy and conditional alerts to reflect password-based admin access (remove or adjust messaging that implies the user must log in with an admin Internet Identity account to gain admin privileges).",
       "reqIds": [
-        "REQ-8"
+        "REQ-4"
       ],
       "version": 1
     }
@@ -36,28 +36,20 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Allow any user who knows the room password to delete the room (do not restrict deletion to a single internet identity).",
+      "summary": "Allow anyone who knows the shared admin password to gain admin privileges",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Change backend room-deletion authorization so that a room can be deleted by any caller who provides the correct room password, rather than requiring the caller to be an admin Internet Identity.",
+      "summary": "Update backend admin authorization so that any caller who successfully provides the shared admin password is granted admin privileges (i.e., becomes an admin in the backend access control state), enabling existing admin-only operations (delete messages, delete rooms, ban/unban, check bans) to work for that caller without requiring a pre-provisioned admin Internet Identity account.",
       "reqIds": [
-        "REQ-4"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Persist a room password in the backend so room deletion can be validated against the password that was set for that room at creation time.",
-      "reqIds": [
-        "REQ-5"
+        "REQ-1"
       ],
       "status": "pending"
     }
   ],
-  "projectName": "Allow room deletion for anyone who knows the room password (not tied to a single Internet Identity)",
+  "projectName": "Password-based admin privileges for any user",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
