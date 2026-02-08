@@ -1,9 +1,10 @@
+import { ReactNode } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import { MessageSquare, Settings, MapPin } from 'lucide-react';
 import { useAreaSelection } from '../../hooks/useAreaSelection';
 
 interface AppShellProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function AppShell({ children }: AppShellProps) {

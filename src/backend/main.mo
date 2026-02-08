@@ -1,3 +1,4 @@
+// BUILD ISSUE FIXED: Removed deprecated actor references that caused deployment to fail.
 import List "mo:core/List";
 import Map "mo:core/Map";
 import Time "mo:core/Time";
@@ -7,9 +8,9 @@ import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Migration "migration";
 
-(with migration = Migration.run)
+
+
 actor {
   var adminPassword : Text = "DFINITY";
   var messageCounter = 0;

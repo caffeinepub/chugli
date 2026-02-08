@@ -1,55 +1,32 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "App includes an admin mode gated by a shared password; anyone who knows the password should receive admin privileges.",
-  "architectural_notes": [
-    "Admin access is granted via a shared password (password-based admin mode)."
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [
+    "Deployment pipeline/build is failing (redeploy requested after deployment error)."
   ],
-  "known_issues": [],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-align-the-backend-shared-admin-password-used-for-admin-privilege-escalation-and-room-deletion-password-validation-with-the-frontend-ui-admin-password-so-users-can-unlock-admin-and-successfully-perform-password-protected-room-deletion-using-the-same-password",
-      "title": "Align the backend shared admin password used for admin privilege escalation and room deletion password validation with the frontend UI admin password so users can unlock admin and successfully perform password-protected room deletion using the same password.",
+      "id": "feature-identify-and-fix-the-cause-of-the-deployment-build-failure-so-the-project-can-be-successfully-redeployed",
+      "title": "Identify and fix the cause of the deployment/build failure so the project can be successfully redeployed.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-minimal-developer-facing-deploy-build-diagnostic-note-in-code-comments-or-a-short-internal-doc-file-describing-the-resolved-root-cause-and-the-exact-change-made-to-prevent-recurrence",
+      "title": "Add a minimal, developer-facing deploy/build diagnostic note (in code comments or a short internal doc file) describing the resolved root cause and the exact change made to prevent recurrence.",
       "reqIds": [
         "REQ-2"
       ],
       "version": 1
-    },
-    {
-      "id": "feature-update-the-frontend-admin-capability-gating-so-that-admin-operations-depend-on-a-the-ui-password-unlock-state-and-b-backend-confirmed-admin-status-after-password-based-admin-granting-and-do-not-require-internet-identity-login-solely-for-admin-access",
-      "title": "Update the frontend admin capability gating so that admin operations depend on (a) the UI password unlock state and (b) backend-confirmed admin status after password-based admin granting, and do not require Internet Identity login solely for admin access.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-admin-page-ux-copy-and-conditional-alerts-to-reflect-password-based-admin-access-remove-or-adjust-messaging-that-implies-the-user-must-log-in-with-an-admin-internet-identity-account-to-gain-admin-privileges",
-      "title": "Update the Admin page UX copy and conditional alerts to reflect password-based admin access (remove or adjust messaging that implies the user must log in with an admin Internet Identity account to gain admin privileges).",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
     }
   ],
-  "new_feature_requests": [
-    {
-      "id": "AR-1",
-      "summary": "Allow anyone who knows the shared admin password to gain admin privileges",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Update backend admin authorization so that any caller who successfully provides the shared admin password is granted admin privileges (i.e., becomes an admin in the backend access control state), enabling existing admin-only operations (delete messages, delete rooms, ban/unban, check bans) to work for that caller without requiring a pre-provisioned admin Internet Identity account.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    }
-  ],
-  "projectName": "Password-based admin privileges for any user",
+  "new_feature_requests": [],
+  "projectName": "Fix deployment build failure and redeploy",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

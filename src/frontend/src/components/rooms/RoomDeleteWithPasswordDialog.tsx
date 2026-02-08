@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { Loader2, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 interface RoomDeleteWithPasswordDialogProps {
   roomId: string;
   roomName: string;
-  trigger?: React.ReactNode;
+  trigger?: ReactNode;
   onSuccess?: () => void;
 }
 

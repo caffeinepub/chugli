@@ -2,11 +2,31 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-align-the-backend-shared-admin-password-used-for-admin-privilege-escalation-and-room-deletion-password-validation-with-the-frontend-ui-admin-password-so-users-can-unlock-admin-and-successfully-perform-password-protected-room-deletion-using-the-same-password",
-      "featureTitle": "Align the backend shared admin password used for admin privilege escalation and room deletion password validation with the frontend UI admin password so users can unlock admin and successfully perform password-protected room deletion using the same password.",
+      "featureId": "feature-identify-and-fix-the-cause-of-the-deployment-build-failure-so-the-project-can-be-successfully-redeployed",
+      "featureTitle": "Identify and fix the cause of the deployment/build failure so the project can be successfully redeployed.",
       "files": [
-        "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx",
-        "frontend/src/hooks/useAdminManagement.ts"
+        "frontend/src/components/chat/MessageComposer.tsx",
+        "frontend/src/components/layout/AppShell.tsx",
+        "frontend/src/components/rooms/RoomDeleteWithPasswordDialog.tsx"
+      ],
+      "components": [
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "authorization@4.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-minimal-developer-facing-deploy-build-diagnostic-note-in-code-comments-or-a-short-internal-doc-file-describing-the-resolved-root-cause-and-the-exact-change-made-to-prevent-recurrence",
+      "featureTitle": "Add a minimal, developer-facing deploy/build diagnostic note (in code comments or a short internal doc file) describing the resolved root cause and the exact change made to prevent recurrence.",
+      "files": [
+        "frontend/DEPLOY_DIAGNOSTICS.md"
       ],
       "components": [
         "core-infrastructure@1.0.2",
@@ -18,49 +38,6 @@
       ],
       "testIds": [
         "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-frontend-admin-capability-gating-so-that-admin-operations-depend-on-a-the-ui-password-unlock-state-and-b-backend-confirmed-admin-status-after-password-based-admin-granting-and-do-not-require-internet-identity-login-solely-for-admin-access",
-      "featureTitle": "Update the frontend admin capability gating so that admin operations depend on (a) the UI password unlock state and (b) backend-confirmed admin status after password-based admin granting, and do not require Internet Identity login solely for admin access.",
-      "files": [
-        "frontend/src/components/admin/AdminModerationPanels.tsx",
-        "frontend/src/components/chat/MessageActionsMenu.tsx",
-        "frontend/src/hooks/useAdminManagement.ts",
-        "frontend/src/pages/AdminPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-admin-page-ux-copy-and-conditional-alerts-to-reflect-password-based-admin-access-remove-or-adjust-messaging-that-implies-the-user-must-log-in-with-an-admin-internet-identity-account-to-gain-admin-privileges",
-      "featureTitle": "Update the Admin page UX copy and conditional alerts to reflect password-based admin access (remove or adjust messaging that implies the user must log in with an admin Internet Identity account to gain admin privileges).",
-      "files": [
-        "frontend/src/components/admin/AdminPasswordAccessPrompt.tsx",
-        "frontend/src/hooks/useAdminManagement.ts",
-        "frontend/src/pages/AdminPage.tsx"
-      ],
-      "components": [
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0",
-        "authorization@4.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
       ],
       "confidence": "high"
     }

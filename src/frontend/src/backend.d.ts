@@ -52,7 +52,6 @@ export interface backendInterface {
     getRoom(id: string): Promise<Room | null>;
     getRoomsByLocation(location: string | null): Promise<Array<Room>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
-    grantAdminWithPassword(password: string): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     isUserBanned(user: Principal): Promise<boolean>;
     muteUser(targetUser: string): Promise<void>;

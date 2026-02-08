@@ -1,90 +1,56 @@
 {
   "kind": "build_request",
-  "title": "Password-based admin privileges for any user",
+  "title": "Fix deployment build failure and redeploy",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update backend admin authorization so that any caller who successfully provides the shared admin password is granted admin privileges (i.e., becomes an admin in the backend access control state), enabling existing admin-only operations (delete messages, delete rooms, ban/unban, check bans) to work for that caller without requiring a pre-provisioned admin Internet Identity account.",
-      "target": "backend",
+      "text": "Identify and fix the cause of the deployment/build failure so the project can be successfully redeployed.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1",
+          "msg-2",
+          "msg-3"
         ],
         "quotes": [
-          "allow anyone with the password to get admin privelliges"
+          "🙏 Deployment ran into an issue\n\n Deployment error",
+          "redeploy"
         ]
       },
       "acceptanceCriteria": [
-        "Backend exposes a shared method that accepts a password and, when correct, grants admin privileges to the caller principal for subsequent calls.",
-        "After calling the new method with the correct password, the same caller can successfully invoke existing admin-only methods (e.g., deleteMessage, banUser) without receiving an \"Unauthorized: Only admins\" trap.",
-        "Calling the new method with an incorrect password does not grant admin privileges and returns/throws a clear error (or trap) indicating invalid password.",
-        "The change works for both authenticated and anonymous callers (i.e., no requirement to be logged in with Internet Identity to become admin after providing the password)."
+        "A clean build completes successfully for both backend and frontend (no compilation/type errors).",
+        "A full deploy/redeploy completes successfully (e.g., `dfx deploy` succeeds) without manual intervention beyond standard configuration.",
+        "If the failure was due to a runtime trap on canister install/upgrade, the deploy no longer traps and the canister can be installed/upgraded successfully."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Align the backend shared admin password used for admin privilege escalation and room deletion password validation with the frontend UI admin password so users can unlock admin and successfully perform password-protected room deletion using the same password.",
-      "target": "both",
+      "text": "Add a minimal, developer-facing deploy/build diagnostic note (in code comments or a short internal doc file) describing the resolved root cause and the exact change made to prevent recurrence.",
+      "target": "unknown",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-2",
+          "msg-3"
         ],
         "quotes": [
-          "allow anyone with the password to get admin privelliges"
+          "Deployment error",
+          "redeploy"
         ]
       },
       "acceptanceCriteria": [
-        "The password expected by the backend for admin unlocking and for deleteRoom(providedPassword) matches the password used by the frontend UI unlock flow (frontend/src/config/adminPassword.ts).",
-        "Entering the correct password in the UI unlock flow enables admin operations and allows room deletion to succeed with the same password.",
-        "Entering an incorrect password in either flow fails with an error indicating the password is incorrect."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Update the frontend admin capability gating so that admin operations depend on (a) the UI password unlock state and (b) backend-confirmed admin status after password-based admin granting, and do not require Internet Identity login solely for admin access.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "allow anyone with the password to get admin privelliges"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The admin panel no longer blocks admin functionality with a \"Not authenticated\" requirement if the user has unlocked with the correct password and the backend confirms admin status.",
-        "The frontend triggers the backend admin-granting flow upon successful password entry (so backend admin checks can pass).",
-        "AdminModerationPanels actions are enabled when the password is correct and backend admin status is true, and remain disabled with clear messaging otherwise."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Update the Admin page UX copy and conditional alerts to reflect password-based admin access (remove or adjust messaging that implies the user must log in with an admin Internet Identity account to gain admin privileges).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-4"
-        ],
-        "quotes": [
-          "allow anyone with the password to get admin privelliges"
-        ]
-      },
-      "acceptanceCriteria": [
-        "AdminPage does not instruct users that they must log in with an \"admin Internet Identity account\" to perform admin operations.",
-        "If admin operations are unavailable, the UI explains the actual next step (e.g., enter password, or password accepted but backend admin not yet granted/verified).",
-        "All user-facing text is in English."
+        "There is a short, clear explanation of what caused the deployment/build to fail and what was changed to fix it.",
+        "The note contains no secrets (no passwords, no private keys, no tokens)."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single-actor Motoko canister (all logic in backend/main.mo).",
-    "Do not modify files listed as immutable in SYSTEM_CONTEXT (compose UI components instead of editing them)."
+    "Do not edit files under `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, or anything under `frontend/src/components/ui` (these paths are immutable/read-only).",
+    "Keep all Motoko logic within the single main actor (`backend/main.mo`). Only introduce `backend/migration.mo` changes if state migration is actually required for the fix."
   ],
   "nonGoals": [
-    "Implementing per-user admin roles or multiple admin tiers.",
-    "Integrating third-party authentication providers beyond Internet Identity.",
-    "Adding external database or off-canister storage."
+    "Do not add new product features unrelated to resolving the deployment/build failure.",
+    "Do not redesign the UI or change app behavior except as needed to fix the build/deploy."
   ],
   "imageRequirements": {
     "required": [],
